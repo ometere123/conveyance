@@ -309,16 +309,15 @@ checks assert.
 
 ```bash
 npm run verify:studionet    # the nine asserted transactions, re-read off the chain
-npm run verify:deployment   # the deployed bytes are this file
-npm run verify:schema       # the deployed method table is these twelve methods
+npm run verify:deployment   # fails closed until a current canonical address is configured
+npm run verify:schema       # verifies the configured canonical method table
 ```
 
-`verify:deployment` is how source provenance is bound here, because **there is no git
-repository in this tree.** A commit says which bytes were intended; a digest says which
-bytes are running. The deployed code was retrieved with `genlayer code`, the CLI's 306 bytes
-of framing were accounted for rather than stripped and rounded off (263 + 130892 + 43 =
-131198 exactly), and the body compares equal at every offset with sha256
-`7bc4452dc063afdd1a3a85f2e465b2ef263d236a5f1a92352e3af2d4ec3b501d`.
+The current Git source is not canonically deployed yet. `verify:deployment` and
+`verify:schema` require an explicit current deployment configuration and fail closed when it
+is absent. The byte-for-byte retrieval details and digest below belong to the historical,
+superseded address only; they are retained so the old claim remains auditable and cannot be
+mistaken for proof of this source.
 
 ### End to end against a served build
 
@@ -327,8 +326,9 @@ npx next build && npx next start -p 3210
 npx playwright test
 ```
 
-**29 tests, 27 passed, 2 recovered on retry, 0 failed, exit 0, 3.9 minutes.** Five routes,
-every one dynamic in the build table, each asserted live rather than fixture-backed.
+The Playwright suite contains 29 tests against a served production build. It is a local
+production-build check unless `E2E_BASE_URL` is explicitly supplied; it is not evidence of a
+published origin or a current StudioNet deployment.
 
 There is no published origin, so the base URL defaults to `http://localhost:3210` and
 `E2E_BASE_URL` points the same suite elsewhere the day there is one. One property is

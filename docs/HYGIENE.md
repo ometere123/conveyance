@@ -1,4 +1,11 @@
-# Repository hygiene sweep
+# Repository hygiene sweep (historical evidence classification)
+
+This document preserves an audit written before the current repository history was carried
+into the submission tree. Its measurements and superseded-deployment findings remain useful,
+but any statement that the project has no Git repository or that the old StudioNet address is
+current is historical context, not a claim about the present checkout. The current source is
+tracked in Git; the old address is **HISTORICAL / SUPERSEDED** and cannot be used as canonical
+evidence for the current contract.
 
 This project was swept for the token classes that most often hide a leaked
 secret, an unfinished thought, or a stale on-chain claim. Every match below was
