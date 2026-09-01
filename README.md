@@ -18,8 +18,7 @@ The contract states its own boundary, in its header and in `parameters()`:
 - Network: StudioNet
 - Contract: `0x104767ad5d51b5004953e4fB9d5B548501aa9bd9`
 - Deployment transaction: `0x27ae8b590ece7c91280d21b28ca9817598b2d3e297453f113e17cdcaa0a9ac6d`
-- Specification: `../genlayer-prds/05-asset-escrow.md`
-- Design system: `../genlayer-prds/design-systems.md`
+- Submission record: [`docs/SUBMISSION.md`](docs/SUBMISSION.md)
 
 ## Why GenLayer is essential
 
@@ -255,16 +254,13 @@ tests, 96 contract tests, 0 failures.**
 
 The 96 contract tests in [tests/direct](tests/direct) are the only place this contract runs
 under the real GenLayer SDK. They matter because the fast layer cannot substitute for them:
-the shared harness at `_build/harness/` loads the contract against a hand-written `gl` stub,
-which is why it could not have caught the casing defect. A stub that returns what you told
-it to return agrees with you.
+the Direct Mode tests use the real GenLayer SDK and the repository is self-contained.
 
 There is a second, faster layer that does not run in CI and lives outside this repository
 because the whole build set shares it:
 
-```bash
-python ../_build/harness/run.py conveyance
-```
+The fast shared harness is intentionally not a reviewer prerequisite; use `tests/direct` from
+this repository for reproducible contract execution.
 
 ### The evidence path, tested standalone
 
@@ -304,9 +300,8 @@ Eleven routes, and flattening them into one number would hide the part worth loo
 
 Every present body's byte count and full sha256 are pinned, so the check fails if a single
 byte changes. It also makes a claim the sibling projects cannot: the shipped captures are
-compared byte for byte against the copies in `_build/fixtures/conveyance/`, which
-`tests/direct/evidence.py` has always asserted in its header and which nothing previously
-checked.
+compared byte for byte against the copies carried by this repository, which the direct evidence
+checks assert.
 
 ### Live StudioNet
 

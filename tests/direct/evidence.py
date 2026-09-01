@@ -2,7 +2,7 @@
 
 EVERY BODY HERE STARTS AS A REAL CAPTURE. The four DoH bodies and the two RDAP bodies in
 `fixtures/` were fetched from Cloudflare, Google, Verisign and PIR and are byte-identical to
-`_build/fixtures/conveyance/`, which the offline harness reads. Nothing in this module writes a
+`_build/fixtures/conveyance/`, which this repository carries and reads. Nothing in this module writes a
 response from scratch: each builder loads the capture, substitutes only the field under test, and
 leaves the rest exactly as it arrived. That is what keeps the parser's real opinions in play. A
 hand-written DoH body would omit Google's `Comment`, would not disagree with Cloudflare about the

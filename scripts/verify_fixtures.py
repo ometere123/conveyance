@@ -65,7 +65,7 @@ EVIDENCE = os.path.join(PROJECT, "tests", "direct", "evidence.py")
 
 #: The offline harness's own copy, which `tests/direct/evidence.py` claims in its header to be
 #: byte-identical to this one. Absent from a standalone checkout, which is reported as a skip.
-SHARED = os.path.join(os.path.dirname(PROJECT), "_build", "fixtures", "conveyance")
+SHARED = os.path.join(PROJECT, "_build", "fixtures", "conveyance")
 
 #: A route whose representative URL is not knowable until something outside the build happens.
 #: Never a pass and never a failure: reported as `wait` and counted apart.

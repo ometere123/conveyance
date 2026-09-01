@@ -1279,7 +1279,7 @@ STATUS_PENDING_DELETE = "pending delete"
 # ======================================================================================
 
 def _fetch(url, headers=None):
-    """The injected fetch the spliced region calls, bound to GenVM's web request.
+    """Fail-closed sentinel; live fetch adapters are defined inside EP blocks.
 
     Two parameters, because that is the contract `_call_fetch` in the region expects:
     `fetch(url, headers=headers)`. `gl.nondet.web.request` has no `timeout` keyword, and its
@@ -1287,7 +1287,7 @@ def _fetch(url, headers=None):
     example is wrong about this, and the region raises a named refusal saying so if it ever
     receives a response object without it.
     """
-    return gl.nondet.web.request(url, method="GET", headers=headers or {})
+    raise RuntimeError("network fetch attempted outside an equivalence-principle block")
 
 
 @gl.evm.contract_interface
@@ -1761,9 +1761,11 @@ class Conveyance(gl.Contract):
         """
         def work():
             try:
-                bootstrap = fetch_bootstrap(_fetch, IANA_BOOTSTRAP_URL)
+                def ep_fetch(url, headers=None):
+                    return gl.nondet.web.request(url, method="GET", headers=headers or {})
+                bootstrap = fetch_bootstrap(ep_fetch, IANA_BOOTSTRAP_URL)
                 base = registry_base_for_domain(bootstrap, domain)
-                parsed = fetch_rdap_domain(_fetch, base, domain)
+                parsed = fetch_rdap_domain(ep_fetch, base, domain)
                 observed = _flatten_rdap(parsed)
                 observed["error"] = ""
                 observed["base"] = str(base)
@@ -1782,7 +1784,9 @@ class Conveyance(gl.Contract):
         """
         def work():
             try:
-                corroboration = fetch_corroborated_txt(_fetch, proof_name)
+                def ep_fetch(url, headers=None):
+                    return gl.nondet.web.request(url, method="GET", headers=headers or {})
+                corroboration = fetch_corroborated_txt(ep_fetch, proof_name)
                 verdict = classify_proof(corroboration, token)
                 observed = _flatten_proof(corroboration, verdict)
                 observed["error"] = ""
@@ -1810,11 +1814,13 @@ class Conveyance(gl.Contract):
         """
         def work():
             try:
-                bootstrap = fetch_bootstrap(_fetch, IANA_BOOTSTRAP_URL)
+                def ep_fetch(url, headers=None):
+                    return gl.nondet.web.request(url, method="GET", headers=headers or {})
+                bootstrap = fetch_bootstrap(ep_fetch, IANA_BOOTSTRAP_URL)
                 fresh = assert_base_still_authoritative(bootstrap, domain, base)
-                parsed = fetch_rdap_domain(_fetch, fresh, domain)
+                parsed = fetch_rdap_domain(ep_fetch, fresh, domain)
                 observed = _flatten_rdap(parsed)
-                corroboration = fetch_corroborated_txt(_fetch, proof_name)
+                corroboration = fetch_corroborated_txt(ep_fetch, proof_name)
                 verdict = classify_proof(corroboration, token)
                 observed.update(_flatten_proof(corroboration, verdict))
                 observed["error"] = ""

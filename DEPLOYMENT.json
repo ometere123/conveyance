@@ -1,4 +1,6 @@
 {
+  "canonicalStatus": "HISTORICAL / SUPERSEDED",
+  "canonicalStatusNote": "The recorded address predates the equivalence-principle fetch adapter fix. It remains historical evidence until a fresh StudioNet deployment matches the final Git commit byte-for-byte.",
   "network": "studionet",
   "contract": "0x104767ad5d51b5004953e4fB9d5B548501aa9bd9",
   "deploymentTransaction": "0x27ae8b590ece7c91280d21b28ca9817598b2d3e297453f113e17cdcaa0a9ac6d",
