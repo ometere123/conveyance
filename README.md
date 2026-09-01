@@ -16,8 +16,9 @@ The contract states its own boundary, in its header and in `parameters()`:
 > registrar account has no retained delegates.
 
 - Network: StudioNet
-- Contract: `0x104767ad5d51b5004953e4fB9d5B548501aa9bd9`
-- Deployment transaction: `0x27ae8b590ece7c91280d21b28ca9817598b2d3e297453f113e17cdcaa0a9ac6d`
+- Canonical StudioNet deployment: **pending for current source**
+- Historical / superseded deployment: `0x104767ad5d51b5004953e4fB9d5B548501aa9bd9`
+- Historical deployment transaction: `0x27ae8b590ece7c91280d21b28ca9817598b2d3e297453f113e17cdcaa0a9ac6d`
 - Submission record: [`docs/SUBMISSION.md`](docs/SUBMISSION.md)
 
 ## Why GenLayer is essential
@@ -139,9 +140,9 @@ Merging `accept_delivery` and `finalize_delivery` is the substantive one. Two ca
 someone whose acceptance matters. Here the state machine decides and anyone may press it, so
 a second call would only be a second chance to press the same button.
 
-## Proven on StudioNet
+## Historical / superseded StudioNet evidence
 
-Nine transactions are asserted against the live chain, by label, and re-checked in one
+Nine transactions are preserved against the superseded deployment, by label, and re-checked in one
 command:
 
 ```bash
@@ -149,7 +150,8 @@ npm run verify:studionet
 ```
 
 The script re-reads every hash off the chain and exits non-zero if any of them no longer
-says what [evidence/studionet.json](evidence/studionet.json) claims. It also asserts each
+says what [evidence/studionet.json](evidence/studionet.json) claims. These checks prove only the
+historical contract. A new canonical deployment must earn a fresh evidence record. The script also asserts each
 transaction's `recipient` equals the contract under test, which is not decoration: the arity
 control below was first captured against deployment 3, whose crash payload is byte-identical
 to deployment 4's, so every other assertion in the loop passed on a stale hash. Feeding that
@@ -490,7 +492,7 @@ and in `knownStaleTextInTheDeployedSource`.
 ## Layout
 
 ```
-contracts/Conveyance.py     the whole product, 130892 bytes, byte-locked to the deployment
+contracts/Conveyance.py     the whole product, current source; parity is required before a deployment is canonical
 src/app                     five routes, all dynamic
 src/components              interface
 src/lib/genlayer            client plumbing, shared across the build set
@@ -507,10 +509,10 @@ DEPLOYMENT.json             addresses, digests, and every superseded deployment
 
 ## Submission notes
 
-- The contract is byte-locked to the live deployment. Editing it, for any reason including a
-  comment, requires a redeployment and invalidates every asserted hash in this repository.
-- Two demonstration deals are deliberately left OFFERED with 0.25 GEN and 0.05 GEN held, so
-  a reviewer arriving at the register finds state rather than an empty table.
+- The historical deployment is not the current source. Editing the contract requires a fresh
+  deployment and fresh parity/evidence before any address can be called canonical.
+- The historical demonstration deals belong to the superseded deployment and are not claimed as
+  current state.
 - `evidence/studionet.json` records the measurements that failed and the ones that nearly
   went in wrong, including a false negative that would have read as a defect. Those are the
   entries worth reading.
