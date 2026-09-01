@@ -3,7 +3,7 @@ import { defineConfig, devices } from "@playwright/test";
 /**
  * End-to-end smoke tests against a running build, not against the source.
  *
- * There is deliberately no `webServer` here. What these tests prove is not that the source
+ * The suite serves the production build locally by default. What these tests prove is not that the source
  * compiles, which `npm run build` already proves, but that a served build is in live mode, is
  * pointed at the contract this commit claims, and renders a record that really exists on StudioNet.
  * That needs something serving, and it needs the contract to answer.
@@ -59,4 +59,10 @@ export default defineConfig({
     video: "off",
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  webServer: {
+    command: "npm run start -- -p 3210",
+    url: "http://127.0.0.1:3210",
+    reuseExistingServer: !process.env.CI,
+    timeout: 120_000,
+  },
 });

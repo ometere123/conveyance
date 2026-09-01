@@ -49,3 +49,6 @@ jobs:
       - run: genvm-lint check contracts/Conveyance.py --json
       - run: npm run build
       - run: python scripts/verify_fixtures.py
+      - name: Install Chromium for browser checks
+        run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
