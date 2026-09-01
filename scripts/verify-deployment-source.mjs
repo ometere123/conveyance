@@ -3,8 +3,7 @@
  *
  * Not "did it deploy". A deployment succeeding proves something is on chain; it does not
  * prove that the something is what the repository claims. This reads the deployed code
- * back off StudioNet and compares it to `contracts/Conveyance.py` after normalising line
- * endings, so a CRLF checkout does not report a false mismatch.
+ * back off StudioNet and compares it to `contracts/Conveyance.py` byte-for-byte.
  */
 import { createAccount, createClient } from "genlayer-js";
 import { studionet } from "genlayer-js/chains";
@@ -26,8 +25,7 @@ if (!address) {
   process.exit(1);
 }
 
-const normalise = (text) => text.replace(/\r\n/g, "\n").trimEnd();
-const digest = (text) => createHash("sha256").update(normalise(text), "utf8").digest("hex");
+const digest = (text) => createHash("sha256").update(text, "utf8").digest("hex");
 
 const local = readFileSync("contracts/Conveyance.py", "utf8");
 
@@ -45,11 +43,11 @@ const deployedHash = digest(deployed);
 
 if (localHash !== deployedHash) {
   console.error("Deployed source does NOT match contracts/Conveyance.py");
-  console.error(`  repo:     sha256 ${localHash} (${normalise(local).length} chars)`);
-  console.error(`  deployed: sha256 ${deployedHash} (${normalise(deployed).length} chars)`);
+    console.error(`  repo:     sha256 ${localHash} (${Buffer.byteLength(local, "utf8")} bytes)`);
+    console.error(`  deployed: sha256 ${deployedHash} (${Buffer.byteLength(deployed, "utf8")} bytes)`);
   process.exit(1);
 }
 console.log(
   `Deployed source matches contracts/Conveyance.py (sha256 ${localHash.slice(0, 16)}, ` +
-    `${normalise(local).length} chars) at ${address}.`,
+    `${Buffer.byteLength(local, "utf8")} bytes) at ${address}.`,
 );

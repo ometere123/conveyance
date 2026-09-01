@@ -11,11 +11,13 @@ title, private registrar custody or beneficial ownership.
 
 ## Canonical deployment
 
-The deployment recorded in `DEPLOYMENT.json` is **HISTORICAL / SUPERSEDED** until a deployment
-whose source digest matches this Git commit is recorded. The prior deployment remains preserved
-in `DEPLOYMENT.json` and `evidence/studionet.json`; it must not be presented as final after the
-equivalence-principle adapter fix. A canonical record must contain the final commit, SHA-256,
-byte count, finalized deployment transaction, schema result and byte-for-byte source proof.
+Canonical StudioNet deployment: `0x7C2f0B5F397957214b7D15120dCb9A5cDbd282d1`, transaction
+`0xfe5547f665b6750cf91b31b917779f9af3ed5876a34c24c8b56eb70e4f2b29b6`, finalized with GenVM
+SUCCESS and raw source parity against commit `3eb6d8e7ddc0bee424ed63323a338829026e77b8`. The
+previous deployment remains **HISTORICAL / SUPERSEDED**.
+The previous deployment remains preserved in `DEPLOYMENT.json` and `evidence/studionet.json` as
+**HISTORICAL / SUPERSEDED**. The canonical record contains the final commit, SHA-256, byte count,
+finalized deployment transaction, schema result and byte-for-byte source proof.
 
 ## Verification
 

@@ -1,12 +1,27 @@
 {
-  "canonicalStatus": "HISTORICAL / SUPERSEDED",
-  "canonicalStatusNote": "This record is preserved, but its deployment source predates the final fetch-boundary refactor and is not the canonical deployment for the current Git tree.",
+  "canonicalStatus": "CANONICAL",
+  "canonicalStatusNote": "Current source deployment verified on StudioNet; older transactions remain historical/superseded.",
   "$comment": "Machine-readable record of the StudioNet proof runs for Conveyance. Every hash here is full and unabbreviated, and every stored value was read back off the deployed contract rather than transcribed from a console. What was NOT proven live is listed under notProvenOnChain and is not claimed anywhere else in this file. The contract was deployed four times and failed once more before that; this file records the current deployment first and keeps the three superseded ones under historicalDeployments, because their transactions prove the behaviour of those contracts and nothing about this one. Every claim in this file is re-checkable by one command: `npm run verify:studionet` with the nine labelled hashes under transactions.checked, which re-reads all nine off the chain and exits non-zero if any of them no longer says what is written here.",
 
   "network": "studionet",
   "endpoint": "https://studio.genlayer.com/api",
-  "contract": "0x104767ad5d51b5004953e4fB9d5B548501aa9bd9",
-  "recordedAt": "2026-08-31",
+  "contract": "0x7C2f0B5F397957214b7D15120dCb9A5cDbd282d1",
+  "recordedAt": "2026-09-01",
+  "currentDeployment": {
+    "gitCommit": "3eb6d8e7ddc0bee424ed63323a338829026e77b8",
+    "deploymentTransaction": "0xfe5547f665b6750cf91b31b917779f9af3ed5876a34c24c8b56eb70e4f2b29b6",
+    "contract": "0x7C2f0B5F397957214b7D15120dCb9A5cDbd282d1",
+    "status": "FINALIZED",
+    "genvmResult": "SUCCESS",
+    "rpcResult": "0x1",
+    "sourceSha256": "665d2b3c497987ffb704018f9b675e5d839b2d9356b3371ab36a635c142fc134",
+    "sourceBytes": 131335,
+    "sourceParity": "PASS",
+    "schema": "PASS",
+    "safeRead": { "method": "list_deals", "args": [], "result": [] },
+    "valueInvariant": { "contractBalanceWei": "0", "heldEscrowWei": "0", "unexplainedWei": "0" }
+  },
+  "currentExercises": [{"label":"invalid settlement on missing deal","tx":"0x133b1602fb4f8d2380748ee9d8bfe5c55bffa8724f65485ca1983ceaa41346ca","method":"settle","args":["missing-live-deal"],"caller":"0xb29Ead15B1E8A2420faE84de974088f67a15ccC2","recipient":"0x7C2f0B5F397957214b7D15120dCb9A5cDbd282d1","valueWei":"0","finality":"FINALIZED","genvm":"ERROR","classification":"FAILED FLOW / EXPECTED REJECTION","stateAfter":{"list_deals":[]},"proofStatus":"PROVEN LIVE"}],
   "firstRecordedAt": "2026-08-31",
 
   "headline": {
