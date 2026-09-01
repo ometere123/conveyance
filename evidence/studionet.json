@@ -1,4 +1,6 @@
 {
+  "canonicalStatus": "HISTORICAL / SUPERSEDED",
+  "canonicalStatusNote": "This record is preserved, but its deployment source predates the final fetch-boundary refactor and is not the canonical deployment for the current Git tree.",
   "$comment": "Machine-readable record of the StudioNet proof runs for Conveyance. Every hash here is full and unabbreviated, and every stored value was read back off the deployed contract rather than transcribed from a console. What was NOT proven live is listed under notProvenOnChain and is not claimed anywhere else in this file. The contract was deployed four times and failed once more before that; this file records the current deployment first and keeps the three superseded ones under historicalDeployments, because their transactions prove the behaviour of those contracts and nothing about this one. Every claim in this file is re-checkable by one command: `npm run verify:studionet` with the nine labelled hashes under transactions.checked, which re-reads all nine off the chain and exits non-zero if any of them no longer says what is written here.",
 
   "network": "studionet",
