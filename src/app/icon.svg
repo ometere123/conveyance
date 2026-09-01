@@ -1,0 +1,19 @@
+<!--
+  An engraver's lozenge with one ink rule across it.
+
+  Deliberately not the seal. The seal means three named proofs landed, and a favicon
+  showing it would claim that on every tab, including tabs where nothing has been
+  proved. A blank security-printed instrument carries a counter shape, so that is what
+  this is: guilloche linework, and one document-ink rule across it, which is the
+  conveyance.
+
+  Every coordinate is even and every stroke is 4 wide, so the whole figure halves onto
+  whole pixels at 16px. Hex is literal rather than var(): a file served as a static
+  asset has no access to the app's stylesheet. Keep it in step with
+  src/components/logo.tsx.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" fill="#0e1a16" />
+  <path d="M16 6 26 16 16 26 6 16Z" fill="none" stroke="#2c7a6b" stroke-width="4" />
+  <path d="M10 16h12" stroke="#d9d5c8" stroke-width="4" />
+</svg>

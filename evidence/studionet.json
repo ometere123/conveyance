@@ -1,0 +1,648 @@
+{
+  "$comment": "Machine-readable record of the StudioNet proof runs for Conveyance. Every hash here is full and unabbreviated, and every stored value was read back off the deployed contract rather than transcribed from a console. What was NOT proven live is listed under notProvenOnChain and is not claimed anywhere else in this file. The contract was deployed four times and failed once more before that; this file records the current deployment first and keeps the three superseded ones under historicalDeployments, because their transactions prove the behaviour of those contracts and nothing about this one. Every claim in this file is re-checkable by one command: `npm run verify:studionet` with the nine labelled hashes under transactions.checked, which re-reads all nine off the chain and exits non-zero if any of them no longer says what is written here.",
+
+  "network": "studionet",
+  "endpoint": "https://studio.genlayer.com/api",
+  "contract": "0x104767ad5d51b5004953e4fB9d5B548501aa9bd9",
+  "recordedAt": "2026-08-31",
+  "firstRecordedAt": "2026-08-31",
+
+  "headline": {
+    "$comment": "The one finding a reviewer should read first, because it was a blocking product defect that no automated layer caught and that live measurement did catch.",
+    "defect": "The seller's control-proof token was built from `Address.as_hex`, which returns the EIP-55 checksummed form, while the interface displayed the same token lowercased. The token is compared to a published DNS TXT value byte for byte, so every deal opened on deployments 1 through 3 named a seller who could not arm it.",
+    "howItWasFound": "By reading a live `get_deal` response by eye. Not by a test. See sellerTokenCasingDefect for the full account, including why the test layer that could have caught it did not and why the layer that runs most often structurally cannot.",
+    "fixedOn": "0x104767ad5d51b5004953e4fB9d5B548501aa9bd9",
+    "provenLive": "Deployment 3 stored `seller=0xac3AC69dC0Bde389256dD6748C75817ead9286D9`; deployment 4 stores `seller=0xac3ac69dc0bde389256dd6748c75817ead9286d9`. Both from a caller that passed the address in lower case, which is also the proof that `as_hex` actively re-cases rather than echoing its input."
+  },
+
+  "app": {
+    "wiring": "NEXT_PUBLIC_CONVEYANCE_CONTRACT is set to the contract above and NEXT_PUBLIC_CONVEYANCE_DATA is `live`, so the build reads the two demonstration deals recorded in this file rather than the on-disk fixture set.",
+    "serverSide": "None. There is no API route, server action, database, indexer, worker, cron or IPFS pin. Reads and writes both go from the browser straight to the GenLayer RPC, every piece of evidence is fetched inside consensus by gl.nondet.web, and every state transition is a permissionless button that any party can press.",
+    "walletMode": "Injected only. window.ethereum signs every write; the app never generates or stores a key. There is no browser-generated signer and therefore no local-signer fallback to test.",
+    "parametersSource": "Read from the contract at runtime through parameters(), not hardcoded in the frontend. That includes the accept, inspection and transfer windows, the two proof labels, the proof version, the nameserver bounds and max_deal_value_wei. The figures under storedState.parameters are the ones the forms enforce.",
+    "hostingStatus": "NOT DEPLOYED TO A PUBLIC HOST as of this record. Recourse published to Vercel and recorded its verified routes and a CORS preflight against that origin; Conveyance has not been published, so no origin is claimed here. See ci.e2e for what was run instead and against which origin, stated plainly rather than implied.",
+    "routesVerified": ["/", "/deals", "/deals/[id]", "/deals/new", "/docs"],
+    "routesVerifiedAgainst": "http://localhost:3210, a local `next start` of the built output. Five routes, all dynamic in the build table, each asserted live rather than fixture-backed. The per-route assertions are under ci.e2e.routesVerified; this list is the coverage, not the claim.",
+    "corsVerified": false,
+    "corsVerifiedNote": "NOT VERIFIED, and not verifiable from here. A preflight is a property of a browser origin talking to a third-party host, and localhost is not an origin a reviewer would use, so running one would prove something about a machine rather than about a deployment. Recorded as false rather than left out, because an absent key reads as an unasked question and this one was asked."
+  },
+
+  "signer": {
+    "address": "0xb29Ead15B1E8A2420faE84de974088f67a15ccC2",
+    "note": "Obtained through the CLI's own BaseAction/getClient path and the OS-keychain cache populated by `genlayer account unlock`. No key was exported, no wallet or keystore was created, no mnemonic or keystore file was opened, and no password was supplied on a command line or written to a file."
+  },
+
+  "deployment": {
+    "transaction": "0x27ae8b590ece7c91280d21b28ca9817598b2d3e297453f113e17cdcaa0a9ac6d",
+    "createdAt": "2026-08-31T02:18:53.679892+00:00",
+    "consensusStatus": "FINALIZED",
+    "receiptStatus": 5,
+    "sourcePath": "contracts/Conveyance.py",
+    "contractSha256": "7bc4452dc063afdd1a3a85f2e465b2ef263d236a5f1a92352e3af2d4ec3b501d",
+    "contractBytes": 130892,
+    "deployedSourceVerified": true,
+    "commitBinding": {
+      "gitCommitCarryingDeployedSource": null,
+      "why": "This tree is not under version control, so there is no commit id to name and none is invented. Recourse could name one and did. Here the binding between the deployed contract and the file on disk is the digest and the byte comparison under parityProof, which is a stronger claim than a commit id anyway: a commit says which bytes were intended, the digest says which bytes are actually running."
+    },
+    "parityProof": {
+      "method": "npx genlayer@0.39.2 code 0x104767ad5d51b5004953e4fB9d5B548501aa9bd9",
+      "retrievedOn": "2026-08-31",
+      "capturedBytes": 131198,
+      "framingBytes": 306,
+      "framing": "The CLI frames the retrieved payload with a 263-byte prefix ending in \"\\n\\nResult:\\n\" and a 43-byte suffix of \"\\n\\n\\u2714 Contract code retrieved successfully\\n\", the tick being three bytes of UTF-8. 263 + 130892 + 43 = 131198, which is the captured length exactly, so no byte of the capture is unaccounted for.",
+      "normalisation": "The body is taken as `tail -c +264 | head -c 130892` and nothing else is touched.",
+      "localBytes": 130892,
+      "deployedBytes": 130892,
+      "sha256Equal": true,
+      "sha256": "7bc4452dc063afdd1a3a85f2e465b2ef263d236a5f1a92352e3af2d4ec3b501d",
+      "cmp": "cmp reported no difference at any byte offset.",
+      "note": "This is a claim about the contract source, not an independent audit of validator bytecode."
+    },
+    "runtimePin": {
+      "firstLine": "# { \"Depends\": \"py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6\" }",
+      "whyItMatters": "Without this line a deploy reports ACCEPTED, then FINALIZED, and returns a contract address, and nothing is registered at that address. It fails like a success. One earlier attempt was lost exactly that way and is recorded under historicalDeployments as a failed deployment rather than a superseded one, because calling it superseded would imply it ever ran."
+    },
+    "schema": {
+      "methods": 12,
+      "writes": 7,
+      "reads": 5,
+      "payable": ["open_deal"],
+      "constructorArguments": 0,
+      "verifiedBy": "npm run verify:schema, which reads the schema off the deployed contract and compares it to the method set the frontend calls."
+    },
+    "benignValidatorError": {
+      "$comment": "Recorded because a reviewer scanning the deploy receipt for the word ERROR will find one, and it is not a failure.",
+      "shape": "execution_result: 'ERROR' with genvm_result.raw_error { fatal: false, causes: ['VALIDATOR_QUORUM_REACHED'] }, error_code CONSENSUS_VALIDATOR_QUORUM_REACHED, stderr 'Validator execution cancelled after quorum', vote 'idle'.",
+      "meaning": "A validator was cancelled after the quorum had already been reached. It is marked non-fatal by the runtime and its vote is idle, not disagree. Reading only the leader receipt avoids this confusion entirely, which is why every assertion in scripts/exercise-studionet.mjs reads consensus_data.leader_receipt[0] and nothing else."
+    },
+    "whyRedeployed": {
+      "defect": "The seller proof token was derived from `Address.as_hex` without lowercasing. See sellerTokenCasingDefect.",
+      "impact": "Every deal on deployments 1 through 3 was unarmable by the seller it named, and the symptom would have been a [TRANSIENT] tag reading 'may be incomplete propagation', so the interface would have told the seller to keep waiting rather than tell them anything was wrong.",
+      "fix": "_proof_token now derives `who.as_hex.lower()`. Because this changes contracts/Conveyance.py it required a new deployment.",
+      "provenLive": "sellerTokenCasingDefect.beforeAndAfter, a clean comparison on identical lower-case input across two deployments."
+    }
+  },
+
+  "sellerTokenCasingDefect": {
+    "$comment": "The most important finding in this file. A blocking defect on the flagship path, found by reading a live response rather than by any automated layer, with a failure mode that would have actively misdirected the user rather than refusing them.",
+    "whatWasWrong": "_proof_token built the seller's control-proof token as `\"%s;deal=%s;%s=%s\" % (PROOF_VERSION, deal_id, kind, who.as_hex)`. `Address.as_hex` returns the EIP-55 checksummed form. src/lib/secret.ts built the same token with `seller.trim().toLowerCase()`. The two never matched.",
+    "whyItIsFatalRatherThanCosmetic": "The token is compared to a fetched DNS TXT value byte for byte. classify_proof asks `expected_token in corroboration.values`, and canonical_control_proof normalises the query name but never the values. So whatever case the contract picks is the case the seller has to publish, exactly, and the seller is shown a different one.",
+    "whyTheFailureModeIsWorseThanARefusal": "A token absent from the TXT set is an absent proof, and an absent proof is tagged [TRANSIENT] with the note that propagation may be incomplete. A case mismatch would therefore have told the seller to wait for a propagation that was never going to help. A refusal would at least have been legible.",
+    "measuredEvidence": {
+      "asHexReturnsChecksummed": "0x81b637d8fCD2C6da6359E6963113a1170de795e4",
+      "howThatWasMeasured": "By writing the invariant as a permanent assertion in tests/direct/test_open_deal.py FIRST and letting it fail, so the expected-versus-actual line in the pytest output is the measurement. The assertion was not written after the fact to match a guess.",
+      "asHexActivelyRecases": "Deployment 3's typed write passed the seller address as lower-case 0xac3ac69dc0bde389256dd6748c75817ead9286d9 and the contract stored it checksummed. So as_hex is not echoing whatever case it was handed; it is re-casing."
+    },
+    "beforeAndAfter": {
+      "identicalInput": "0xac3ac69dc0bde389256dd6748c75817ead9286d9, passed lower case in both cases",
+      "deployment3": {
+        "contract": "0xC162BA113137539fD734e986403C1FA5fAbA6109",
+        "seller_proof_token": "v1;deal=cv-demo-example-com-1;seller=0xac3AC69dC0Bde389256dD6748C75817ead9286D9"
+      },
+      "deployment4": {
+        "contract": "0x104767ad5d51b5004953e4fB9d5B548501aa9bd9",
+        "seller_proof_token": "v1;deal=cv-demo-example-com-1;seller=0xac3ac69dc0bde389256dd6748c75817ead9286d9"
+      }
+    },
+    "theDistinctionThatSurvivedTheFix": {
+      "$comment": "The fix is narrower than 'lowercase addresses everywhere', and one live read shows both halves in one object.",
+      "readFrom": "delivery_status('example.net') on deployment 4",
+      "seller": "0xac3AC69dC0Bde389256dD6748C75817ead9286D9",
+      "seller_proof_token": "v1;deal=cv-demo-example-net-1;seller=0xac3ac69dc0bde389256dd6748c75817ead9286d9",
+      "why": "A displayed address should stay checksummed, because the checksum is what lets a reader catch a typo. Only a value that gets compared has to be lower case. Both appear in the same response, which is the clearest available statement of the rule."
+    },
+    "whyNoTestCaughtIt": {
+      "layer1": "_build/conveyance-rdap/rdap.py and its own suite. Out of scope: it never sees an Address.",
+      "layer2": "_build/harness/suites/test_conveyance.py, the layer that runs most often. STRUCTURALLY BLIND to this class of defect, not merely missing a case. Its expected token at line 470 is `\"v1;deal=%s;seller=%s\" % (DEAL, SELLER)`, built from a module-level constant string against a hand-written `gl` stub whose Address is a stub. A stub Address cannot re-case anything, so the contract and the test agreed with each other while both disagreed with the SDK.",
+      "layer3": "conveyance/tests/direct/, the only layer that runs the contract under the real GenVM SDK, and therefore the only layer that could ever have measured as_hex. It could have caught this and did not, because no assertion existed on the token's case until one was written in response to the live reading.",
+      "lesson": "A test double that is more permissive than the thing it doubles will confirm a defect rather than find it. The stub Address is the specific instance here, and it is why the direct layer now carries the assertion instead of the harness."
+    },
+    "guardsAddedSoItCannotReturn": [
+      "tests/direct/test_open_deal.py asserts the stored token equals `direct_bob.as_hex.lower()`, asserts the token equals its own lower case, and asserts the lowercased address is a substring. Under the real SDK.",
+      "tests/frontend/proof-records.test.ts reads contracts/Conveyance.py at test time, requires the format string to be built from `who.as_hex.lower()`, and separately asserts `doesNotMatch(CONTRACT, /kind, who\\.as_hex\\)/)` so the `.lower()` cannot be dropped by a refactor that still satisfies the format string.",
+      "scripts/exercise-studionet.mjs runs one regex over every string the chain returns and every token it reads back, and fails if any `seller=0x...` is not all lower case. That is the guard that would catch a regression on a deployment nobody thought to re-test."
+    ]
+  },
+
+  "receiptShapes": {
+    "$comment": "Measured shapes, recorded because the difference between two of them is the difference between a rule firing and a crash, and a reviewer reading only execution_result cannot tell them apart.",
+    "return": {
+      "execution_result": "SUCCESS",
+      "result.status": "return",
+      "result.payload": "{ readable: '\"<JSON-quoted string>\"' }",
+      "usedBy": "open_deal, the one payable method, for both success and refusal",
+      "note": "The payload is the return value JSON-encoded, so a returned string arrives wrapped in quotes and has to be parsed back out before it can be compared."
+    },
+    "rollback": {
+      "execution_result": "ERROR",
+      "result.status": "rollback",
+      "result.payload": "the tagged message as a plain string",
+      "usedBy": "the eleven non-payable methods",
+      "note": "Storage is rolled back and the error tag survives intact."
+    },
+    "contract_error": {
+      "execution_result": "ERROR",
+      "result.status": "contract_error",
+      "result.payload": "exit_code 1",
+      "usedBy": "nothing deliberately; this is what a crash looks like",
+      "note": "No tag, because no rule fired."
+    },
+    "theTrap": "rollback and contract_error share `execution_result: 'ERROR'`. Reading execution_result cannot distinguish a refusal from a bug, so nothing in scripts/exercise-studionet.mjs reads it for that purpose; every assertion goes through result.status. The arityError transaction below exists solely to hold that distinction still.",
+    "theOtherTrap": "`gl.vm.UserError.__str__` returns `repr(self)`, so `str(exc)` yields `UserError(message='[EXPECTED] ...')` and buries the tag one layer down where a prefix check will not find it. `exc.message` is the correct read. This was a real defect in _decline before it was fixed."
+  },
+
+  "transactions": {
+    "$comment": "All nine were re-read off the chain by scripts/exercise-studionet.mjs on 2026-08-31 and all nine assertions passed. The `checked` list is the exact argument list to reproduce that.",
+    "verifiedBy": "npm run verify:studionet",
+    "allNinePassed": true,
+    "checked": [
+      "open1=0x8dcd42b966ce034259b39223dc310c1af2f14280d17447ae4d999510b1b6386b",
+      "open2=0xd21aeec40d6bbacc7e4110572c155b6589abf2225bbf4ca67d6d1d8bc59274e6",
+      "zeroControl=0x8acd89ac316302b9c2ab22c9d1aa4a55eb9945af3c901c94a4d83d8426712d68",
+      "fundedRefusal=0xadec94d871007024683de4f5592a463b4f416b277ecfb299e8a522fc98fde1f0",
+      "arm=0xcd42bee980c60816bea459a2f0e6977a59713c8bc0c68d9ea8d3a75e3e0693bb",
+      "settle=0x1f5e09cf91380ccfdc43ea02c15c9131a1421ac549b977456e96bc44ed83e10c",
+      "refund=0xe637274b8fa9888f748e7965d33adc3926d3c070dd0207621bd09a2605d537e6",
+      "checkTransfer=0xec6ce5e41e5ebd2f58885c477239f93cab549c4eda9047674616497391912628",
+      "arityError=0xad5875caefc63e849c6bf0ca843b79187a80964e4999614fe2c6d9b65a7bfd24"
+    ],
+    "recipientGuard": {
+      "$comment": "A guard is worth nothing until it has been shown to fire, so it was shown.",
+      "what": "Every labelled transaction's `recipient` must equal the contract under test.",
+      "whyItExists": "The arityError control was originally captured against deployment 3, whose crash payload is byte-identical to deployment 4's. Every other assertion in the loop passes on that stale hash, because the wording of a refusal did not change between deployments. A stale hash sitting in an evidence file next to a current contract address would then read as a live proof of the current contract.",
+      "demonstrated": "Passing deployment 3's arity hash 0xdb412812c8c9210d508ce15ab5410435eec39d08a9e2dd60d21f4f93c493bf0f produced exactly one failure, the recipient mismatch, and no others. The control was then re-captured against deployment 4 as 0xad5875caefc63e849c6bf0ca843b79187a80964e4999614fe2c6d9b65a7bfd24."
+    },
+    "deals": [
+      {
+        "label": "open1",
+        "hash": "0x8dcd42b966ce034259b39223dc310c1af2f14280d17447ae4d999510b1b6386b",
+        "method": "open_deal",
+        "valueWei": "250000000000000000",
+        "consensusStatus": "FINALIZED",
+        "leaderExecutionResult": "SUCCESS",
+        "leaderResultStatus": "return",
+        "returnValue": "cv-demo-example-com-1 OFFERED: 250000000000000000 wei escrowed on example.com, today at IANA id 376 and due at 146. The seller has until 2026-09-02T02:21:41Z to publish _conveyance-seller.example.com IN TXT 'v1;deal=cv-demo-example-com-1;seller=0xac3ac69dc0bde389256dd6748c75817ead9286d9' and call arm(). The domain carries a client transfer prohibition, which the losing registrar can lift on the registrant's instruction and must, before the transfer can start.",
+        "openedAt": "2026-08-31T02:21:41Z",
+        "acceptDeadline": "2026-09-02T02:21:41Z",
+        "buyerProofCommitment": "807d3371b140d6b4151694ffe824d8d8d3c20f00019369187dcf7dd7f7d863df",
+        "commitmentPreimage": "v1;deal=cv-demo-example-com-1;buyer=0xb29ead15b1e8a2420fae84de974088f67a15ccc2;secret=f4c9a2e7",
+        "commitmentNote": "The preimage is recorded here because this is a demonstration deal on a simulated network and its secret protects nothing. On a real deal the secret never leaves the buyer's tab and only its sha256 goes on chain. It is included so a reviewer can hash it themselves and confirm the digest rather than take it.",
+        "baselineDigest": "f8b5022c8aec7d3a89d3219480e2fb252f77b8ecfb17eaa7eb788ee981cf25be",
+        "note": "The return string carries the exact TXT line the seller has to publish, lower case, which is the thing the casing defect used to get wrong."
+      },
+      {
+        "label": "open2",
+        "hash": "0xd21aeec40d6bbacc7e4110572c155b6589abf2225bbf4ca67d6d1d8bc59274e6",
+        "method": "open_deal",
+        "valueWei": "50000000000000000",
+        "consensusStatus": "FINALIZED",
+        "leaderExecutionResult": "SUCCESS",
+        "leaderResultStatus": "return",
+        "returnValueSummary": "cv-demo-example-net-1 OFFERED: 50000000000000000 wei escrowed on example.net",
+        "openedAt": "2026-08-31T02:22:43Z",
+        "acceptDeadline": "2026-09-02T02:22:43Z",
+        "buyerProofCommitment": "6e51437e3794dca53011a46dc2123669f446ec0d9f88f441ab1265460534e478",
+        "commitmentSecret": "a71d5c93",
+        "baselineDigest": "9ec666f32ce63df9f149e32970003ef38c8de703bd42a0210c7fb2662dc323b8",
+        "rdapBase": "https://rdap.verisign.com/net/v1/",
+        "note": "Opened on a second TLD deliberately, so two different RDAP bases are exercised rather than one path twice."
+      }
+    ],
+    "refusals": [
+      {
+        "label": "zeroControl",
+        "hash": "0x8acd89ac316302b9c2ab22c9d1aa4a55eb9945af3c901c94a4d83d8426712d68",
+        "method": "open_deal",
+        "valueWei": "0",
+        "leaderResultStatus": "return",
+        "returnValue": "[EXPECTED] a deal needs an escrow; this call carried no value",
+        "storedAnything": false,
+        "strandedAnything": false,
+        "why": "The payable method refuses by returning rather than raising. With no value attached there is nothing to refund, so this case proves the refusal and not the refund. The refund is proven by fundedRefusal."
+      },
+      {
+        "label": "arm",
+        "hash": "0xcd42bee980c60816bea459a2f0e6977a59713c8bc0c68d9ea8d3a75e3e0693bb",
+        "method": "arm",
+        "leaderExecutionResult": "ERROR",
+        "leaderResultStatus": "rollback",
+        "returnValue": "[EXPECTED] only the named seller can arm deal cv-demo-example-com-1",
+        "proves": "Authorisation is checked, and a non-payable refusal reverts with the tag intact."
+      },
+      {
+        "label": "settle",
+        "hash": "0x1f5e09cf91380ccfdc43ea02c15c9131a1421ac549b977456e96bc44ed83e10c",
+        "method": "settle",
+        "leaderExecutionResult": "ERROR",
+        "leaderResultStatus": "rollback",
+        "returnValue": "[EXPECTED] deal cv-demo-example-com-1 is OFFERED; settle() needs VERIFIED",
+        "proves": "Settlement is gated on the state machine and not on who is asking, which is what makes the transition permissionless without being unsafe."
+      },
+      {
+        "label": "refund",
+        "hash": "0xe637274b8fa9888f748e7965d33adc3926d3c070dd0207621bd09a2605d537e6",
+        "method": "refund",
+        "leaderExecutionResult": "ERROR",
+        "leaderResultStatus": "rollback",
+        "returnValueShape": "[EXPECTED] the seller has until 2026-09-02T02:21:41Z to arm deal cv-demo-example-com-1",
+        "proves": "The escrow cannot be pulled back before the acceptance window closes. This is the time gate, exercised live in its refusing direction."
+      },
+      {
+        "label": "checkTransfer",
+        "hash": "0xec6ce5e41e5ebd2f58885c477239f93cab549c4eda9047674616497391912628",
+        "method": "check_transfer",
+        "argumentCount": 2,
+        "leaderExecutionResult": "ERROR",
+        "leaderResultStatus": "rollback",
+        "returnValue": "[EXPECTED] deal cv-demo-example-com-1 is OFFERED; check_transfer() needs LOCKED or VERIFIED",
+        "proves": "A check on an unarmed deal is refused before any network call is made, so a caller cannot burn a consensus round on a deal that is not ready."
+      }
+    ],
+    "arityError": {
+      "$comment": "The control. Not a bug being reported as evidence; a deliberate crash, kept because it is the only thing that proves an untagged crash is distinguishable from a tagged refusal.",
+      "label": "arityError",
+      "hash": "0xad5875caefc63e849c6bf0ca843b79187a80964e4999614fe2c6d9b65a7bfd24",
+      "method": "check_transfer",
+      "argumentCount": 1,
+      "argumentCountRequired": 2,
+      "consensusStatus": "FINALIZED",
+      "leaderExecutionResult": "ERROR",
+      "leaderResultStatus": "contract_error",
+      "payload": "exit_code 1",
+      "carriesATag": false,
+      "why": "A Python TypeError from the wrong arity. It shares `execution_result: 'ERROR'` with every tagged refusal above, and differs only in result.status and in carrying no tag. The exercise script asserts both facts, so a future change that started tagging crashes would fail here rather than quietly turn every bug into a verdict on screen.",
+      "sameShapeOnDeployment3": "0xdb412812c8c9210d508ce15ab5410435eec39d08a9e2dd60d21f4f93c493bf0f, payload byte-identical, which is why the recipient guard above exists."
+    }
+  },
+
+  "fundedRefusal": {
+    "$comment": "The requirement that forced the second redeployment: a funded call the contract refuses must not keep the caller's value. StudioNet does not return gl.message.value when an execution reverts, so a payable method cannot refuse by raising.",
+    "hash": "0xadec94d871007024683de4f5592a463b4f416b277ecfb299e8a522fc98fde1f0",
+    "method": "open_deal",
+    "valueWei": "50000000000000000",
+    "consensusStatus": "FINALIZED",
+    "leaderExecutionResult": "SUCCESS",
+    "leaderResultStatus": "return",
+    "returnValue": "[EXPECTED] deal 'cv-demo-example-com-1' already exists",
+    "storedAnything": false,
+    "refundMessage": {
+      "messageType": "0",
+      "recipient": "0xb29Ead15B1E8A2420faE84de974088f67a15ccC2",
+      "value": 50000000000000000,
+      "data": "",
+      "onAcceptance": false
+    },
+    "whereTheMessageLives": "tx.messages[0], at the top level of the transaction object, a sibling of result_name, sender, recipient, tx_id, num_of_rounds and last_round. It is NOT nested inside consensus_data.leader_receipt[0]. This is recorded because looking for it in the receipt finds nothing and reads as an absent refund.",
+    "recipientEqualsSender": true,
+    "whyTheReceiptAndNotABalance": "A balance cannot say who the money went to, and at the moment the receipt is available the balance has not moved yet. The message is the only place both facts appear together.",
+    "totalRefundedStaysZero": {
+      "value": "0",
+      "why": "Correct, and worth stating so it does not read as a miscount. _decline returns the escrow of a call that never became a deal, so it is not a deal refund. A non-zero total_refunded would mean the refund() path had actually run against a stored deal, which it has not."
+    }
+  },
+
+  "refundAtFinalization": {
+    "$comment": "A measurement that nearly went into this file as a false negative, recorded in full because the trap is easy to fall into twice.",
+    "what": "The refund message carries `onAcceptance: false`, which means the transfer is dispatched at FINALIZED and not at ACCEPTED.",
+    "consequence": "A ledger() read taken seconds after a funded refusal shows balance exceeding held by exactly the refunded amount. That is the same shape as the value-stranding defect this contract was redeployed to fix, and it reads as though the fix did not work.",
+    "measuredTriple": [
+      {
+        "when": "before the funded refusal",
+        "balance": "300000000000000000",
+        "held": "300000000000000000",
+        "equal": true
+      },
+      {
+        "when": "immediately after the receipt, at ACCEPTED",
+        "balance": "350000000000000000",
+        "held": "300000000000000000",
+        "equal": false,
+        "readsAs": "the deployment 2 defect",
+        "actuallyIs": "the refund in flight"
+      },
+      {
+        "when": "after 55 seconds, at FINALIZED",
+        "balance": "300000000000000000",
+        "held": "300000000000000000",
+        "equal": true
+      }
+    ],
+    "rule": "Anything asserting `balance == held` must wait for FINALIZED. scripts/exercise-studionet.mjs asserts it exactly once, after every labelled hash has been polled to FINALIZED, and the comment at that line says why it is not asserted earlier.",
+    "howToTellTheTwoApart": "The stranding defect shows a permanent gap with no value-bearing receipt message. The refund in flight shows a temporary gap with a message whose recipient is the caller. The message is the discriminator, not the balance."
+  },
+
+  "valueLedger": {
+    "$comment": "The contract's own inventory, reconciled so that nothing in the balance is left as a loose end.",
+    "transactions": [
+      { "hash": "0x27ae8b590ece7c91280d21b28ca9817598b2d3e297453f113e17cdcaa0a9ac6d", "deltaWei": "0", "what": "deployment" },
+      { "hash": "0x8dcd42b966ce034259b39223dc310c1af2f14280d17447ae4d999510b1b6386b", "deltaWei": "+250000000000000000", "what": "deal 1 opened on example.com" },
+      { "hash": "0xd21aeec40d6bbacc7e4110572c155b6589abf2225bbf4ca67d6d1d8bc59274e6", "deltaWei": "+50000000000000000", "what": "deal 2 opened on example.net" },
+      { "hash": "0x8acd89ac316302b9c2ab22c9d1aa4a55eb9945af3c901c94a4d83d8426712d68", "deltaWei": "0", "what": "open_deal with no value, refused, nothing to refund" },
+      { "hash": "0xadec94d871007024683de4f5592a463b4f416b277ecfb299e8a522fc98fde1f0", "deltaWei": "0", "what": "funded refusal: +50000000000000000 in, then -50000000000000000 refunded at finalization, net zero" },
+      { "hash": "0xcd42bee980c60816bea459a2f0e6977a59713c8bc0c68d9ea8d3a75e3e0693bb", "deltaWei": "0", "what": "arm refused, not the named seller" },
+      { "hash": "0x1f5e09cf91380ccfdc43ea02c15c9131a1421ac549b977456e96bc44ed83e10c", "deltaWei": "0", "what": "settle refused, wrong state" },
+      { "hash": "0xe637274b8fa9888f748e7965d33adc3926d3c070dd0207621bd09a2605d537e6", "deltaWei": "0", "what": "refund refused, acceptance window still open" },
+      { "hash": "0xec6ce5e41e5ebd2f58885c477239f93cab549c4eda9047674616497391912628", "deltaWei": "0", "what": "check_transfer refused, wrong state" },
+      { "hash": "0xad5875caefc63e849c6bf0ca843b79187a80964e4999614fe2c6d9b65a7bfd24", "deltaWei": "0", "what": "arity crash, non-payable, nothing transferred" }
+    ],
+    "netFromLedgerWei": "300000000000000000",
+    "ledgerBalanceWei": "300000000000000000",
+    "ledgerHeldWei": "300000000000000000",
+    "balanceEqualsHeld": true,
+    "accountedAs": "250000000000000000 escrowed against deal 1 plus 50000000000000000 escrowed against deal 2. Nothing else. No stranded value on this deployment.",
+    "valueStranded": "NO"
+  },
+
+  "storedState": {
+    "readBackOn": "2026-08-31",
+    "parameters": {
+      "accept_window_seconds": "172800",
+      "boundary": "Conveyance verifies public transfer signals and operational DNS control. It does not prove legal title, beneficial ownership, the identity of a private registrant, or that a registrar account has no retained delegates.",
+      "buyer_proof_label": "_conveyance-buyer",
+      "check_interval_seconds": "300",
+      "embedded_function_count": "40",
+      "iana_bootstrap_url": "https://data.iana.org/rdap/dns.json",
+      "inspection_window_seconds": "259200",
+      "max_deal_value_wei": "100000000000000000000",
+      "max_nameservers": "8",
+      "min_nameservers": "2",
+      "proof_version": "v1",
+      "resolvers": "cloudflare,google",
+      "seller_proof_label": "_conveyance-seller",
+      "transfer_window_seconds": "864000",
+      "uses_a_model": "false"
+    },
+    "usesAModelIsFalse": "This is the field that backs the no-model claim, and it is read off the deployed contract rather than asserted in prose. Conveyance decides nothing with an LLM: every determination is a comparison against RDAP and DNS values fetched inside consensus. The exercise script asserts this field, so the claim cannot drift from the deployment.",
+    "embeddedFunctionCountIs40": "The count of callables inside the spliced RDAP region: 37 def and 3 class. It matches EMBEDDED_FUNCTION_COUNT in the source and the splice guard's own count, so a region edited without updating the constant fails the guard, and a region edited without redeploying fails the exercise script.",
+    "ledger": {
+      "balance": "300000000000000000",
+      "held": "300000000000000000",
+      "deals_opened": "2",
+      "checks_run": "0",
+      "deliveries_verified": "0",
+      "reversals_recorded": "0",
+      "total_escrowed": "300000000000000000",
+      "total_refunded": "0",
+      "total_released": "0",
+      "protocol_fee": "0"
+    },
+    "listDeals": ["cv-demo-example-com-1", "cv-demo-example-net-1"],
+    "listDealsOrder": "Open order, asserted by the exercise script. The order matters because deployment 1 was replaced for a domain-index defect, and an index that has silently reordered is the shape that defect took.",
+    "leftDeliberatelyNonEmpty": "Two OFFERED deals with real escrow behind them, so a reviewer opening the frontend against this contract sees live state rather than an empty list. The contract was not swept clean after the exercise."
+  },
+
+  "liveSourceProof": {
+    "$comment": "Whether the evidence this product depends on can actually be fetched and canonicalised inside a consensus round, which is the central technical risk.",
+    "whatIsFetchedInsideConsensus": [
+      "IANA's RDAP bootstrap at https://data.iana.org/rdap/dns.json, to resolve a TLD to its registry RDAP base rather than hardcoding one",
+      "the registry RDAP record for the domain, for statuses, registrar id, nameservers and the last-changed and transfer timestamps",
+      "DNS TXT over DoH at Cloudflare and Google, for the two control-proof records"
+    ],
+    "rdapBasesObserved": {
+      "com": "https://rdap.verisign.com/com/v1/",
+      "net": "https://rdap.verisign.com/net/v1/"
+    },
+    "reproducibility": {
+      "$comment": "The strongest single fact about the canonicalisation, and it was free: it fell out of having redeployed.",
+      "claim": "The same RDAP evidence, fetched inside consensus on two different deployments on different days, canonicalised to byte-identical digests.",
+      "example.com": {
+        "deployment3": "f8b5022c8aec7d3a89d3219480e2fb252f77b8ecfb17eaa7eb788ee981cf25be",
+        "deployment4": "f8b5022c8aec7d3a89d3219480e2fb252f77b8ecfb17eaa7eb788ee981cf25be",
+        "identical": true
+      },
+      "example.net": {
+        "deployment3": "9ec666f32ce63df9f149e32970003ef38c8de703bd42a0210c7fb2662dc323b8",
+        "deployment4": "9ec666f32ce63df9f149e32970003ef38c8de703bd42a0210c7fb2662dc323b8",
+        "identical": true
+      },
+      "whyItMatters": "A canonicalisation that varied with field order, whitespace, timestamp formatting or the order the validators happened to fetch in would produce a different digest on a different day and the deal would report a change that never happened. Two independent deployments agreeing to the byte is evidence the canonical form is actually canonical, and it is not a single lucky fetch."
+    },
+    "observedBaseline": {
+      "domain": "example.net",
+      "baseline_registrar_id": "376",
+      "baseline_registrar_name": "RESERVED-Internet Assigned Numbers Authority",
+      "baseline_statuses": "client delete prohibited,client transfer prohibited,client update prohibited",
+      "baseline_nameservers": "betty.ns.cloudflare.com,hugh.ns.cloudflare.com",
+      "baseline_last_changed_at": "2026-01-16T18:27:59Z",
+      "baseline_client_transfer_locked": "True"
+    },
+    "transferLockIsReportedNotRefused": "example.com and example.net both carry a client transfer prohibition, and open_deal accepted both while saying so in its return value. That is deliberate: a losing registrar can lift a client transfer prohibition on the registrant's instruction and must before a transfer can start, so refusing the deal would refuse the normal case. A registry-side lock is different and is treated as a suspension.",
+    "expiryIsDeliberatelyNotASuspension": {
+      "measured": "example.net shows a past expiry and delivery_status still reports it escrowable.",
+      "why": "_suspension checks only hold_locked and pending delete. An expiry date in the past does not stop a domain resolving or transferring, and registries publish stale expiry values on reserved names routinely. Gating on it would refuse deals on healthy domains. This is a decision, not an oversight, and it is recorded here so a reviewer does not read it as a missed check.",
+      "escrowableIsDerived": "escrowable is str(self._suspension(observed) == \"\"), so it is the absence of a suspension rather than an independent judgement."
+    },
+    "blockerFound": false
+  },
+
+  "submissionTooling": {
+    "$comment": "How the payable writes were submitted, stated precisely so a reviewer can judge the claim rather than take it.",
+    "whatGenlayerJsReceived": "For deal 1: the arguments as plain JS values exactly as src/app/offer builds them, plus value 250000000000000000n. The encoding path is the browser's.",
+    "howItDiffersFromTheBrowser": "Only in where the signature comes from: the OS keychain that `genlayer account unlock` populates, instead of a wallet extension. Argument construction, encoding and the client.writeContract call are the same.",
+    "howItDiffersFromTheStockCli": "Two fixes. `genlayer write` hardcodes value 0n and offers no option for gl.message.value; `--fee-value` is not that option, because parseTransactionFees assigns it to the nested fees.feeValue. And parseScalar coerces any argument matching ^0x[0-9a-fA-F]{40}$ into a CalldataAddress, turns a numeric string into an int, and parses a JSON-looking string into a real list, so a `str` parameter can receive an Address and `.strip()` raises AttributeError.",
+    "bridge": "_build/genlayer-cli-payable/scripts/typed-write.ts, compiled to dist/typed-write.mjs. It routes JSON.parse'd JS values straight to client.writeContract through the CLI's own WriteAction to BaseAction to getClient path, and supports {\"$bigint\": \"...\"} for values that must not become Numbers.",
+    "signing": "Unchanged. No key was read, decrypted, exported or logged; no wallet or keystore was created; no mnemonic or keystore file was opened; no password was supplied.",
+    "location": "A separate local clone of genlayer-cli at tag v0.39.2. It is not part of this repository and no contract change was needed for any of it.",
+    "whereTheStockCliWasStillUsed": "For non-payable calls whose arguments cannot be mis-coerced, including the arity crash control. The `ledger` read has to be called with no --args at all: passing `--args` with nothing after it makes the CLI exit with `error: option '--args <args...>' argument missing` and produce no output, which looks like a contract fault and is not one."
+  },
+
+  "frontendFixes": [
+    {
+      "defect": "src/lib/returned-value.ts decoded a [REJECTED] prefix. Conveyance has no [REJECTED] tag; that is Recourse's vocabulary. Conveyance's four tags are [EXPECTED], [EXTERNAL], [TRANSIENT] and [LLM_ERROR], and only the first is a verdict. A real refusal therefore fell through the decoder unrecognised.",
+      "fix": "The decoder now reads the four tags the contract actually declares, at Conveyance.py lines 1210 to 1213, and fails closed on anything else.",
+      "consequence": "Caught by a frontend test, not by inspection. This is one of two defects in this file that only the frontend layer could have found.",
+      "contractChanged": false
+    },
+    {
+      "defect": "src/components/write-runner.tsx hard-coded `outcome: \"expected\"` on every refusal, and src/components/transaction-rail.tsx printed [EXPECTED] over all four tags. So a source that failed to answer ([EXTERNAL]) and a round that decided nothing ([TRANSIENT]) both displayed as a rule having fired, which is the one confusion the taxonomy exists to prevent.",
+      "fix": "Both now carry the decoded tag through rather than assuming it.",
+      "consequence": "The distinction between 'a rule fired' and 'nothing was decided, retry' is visible in the interface, which matters most for exactly the [TRANSIENT] case the casing defect would have produced.",
+      "contractChanged": false
+    },
+    {
+      "defect": "_decline raised with `str(exc)`, and `gl.vm.UserError.__str__` returns `repr(self)`, so the tag arrived wrapped as `UserError(message='[EXPECTED] ...')` and no prefix check could find it.",
+      "fix": "`exc.message`.",
+      "consequence": "The tag is at the front of the string where every decoder expects it. This one did change the contract and is part of why deployment 4 exists.",
+      "contractChanged": true
+    },
+    {
+      "defect": "Next 16 prerenders a route at build time unless told otherwise, and four routes read the contract at module scope. So the register, the plate, the offer form and the instrument were all serving contract state frozen at the moment of the build. Nothing looked broken: the figures were real figures, read from the real contract, and simply older than the page claimed. A stale escrow total on an escrow register is worse than a missing one, because a missing one is visibly missing.",
+      "fix": "`export const dynamic = \"force-dynamic\"` on every route that reads the contract.",
+      "consequence": "Confirmed in the build route table rather than by reasoning about it: `ƒ /`, `ƒ /deals`, `ƒ /deals/[id]`, `ƒ /deals/new` and `ƒ /docs` are dynamic, and the only static entries left are `○ /_not-found` and `○ /icon.svg`, neither of which reads anything. `export const revalidate` was considered as a middle ground and declined: a window in which a settled deal still shows as held is a window in which someone acts on it.",
+      "contractChanged": false
+    },
+    {
+      "defect": "src/lib/live-reads.ts wrapped keyed reads in a `readMaybe` helper that turned any thrown read into NOT_FOUND. The frontend was therefore undoing, on the last hop, exactly the care the contract takes: a transport fault became a verdict about storage, and a page that could not reach the node said the register does not carry this deal. That is the mirror image of the defect this whole build is about.",
+      "fix": "`readMaybe` was removed. A read that failed is reported as a read that failed, and NOT_FOUND is reserved for the node answering that the record is absent.",
+      "consequence": "Measured before assuming: both keyed reads answer `{}` for an unknown key rather than raising, so the helper was not even serving the case it was written for. The guard was proven by reintroducing the defect, which turned four of the nine read-classification tests red with the file and the sentence named. Then proven again live and by accident, which is the better proof: an e2e run exhausted StudioNet's thirty-reads-a-minute budget, and the page printed `[EXTERNAL] Read failed` beside the node's own sentence rather than an empty register. That is the only time in this build the property was exercised against a real adverse network instead of a constructed one.",
+      "contractChanged": false
+    },
+    {
+      "defect": "/deals/new read the contract three times to render once. Three components each needed `parameters()`, each called it, and React's `cache()` was unavailable because two `\"use client\"` components import from the same module, which puts it in the client bundle. Against a node that allows thirty reads a minute, a form that costs three reads a load is a form that can rate-limit a single reader refreshing it.",
+      "fix": "The read happens once in the route and the result is passed down.",
+      "consequence": "Three reads to one, measured on the served page rather than inferred from the source. The alternative of a type-level `Exclude<ReadResult<T>, {kind: \"NOT_FOUND\"}>` for unkeyed reads was considered and declined: it would have made the unreachable case unrepresentable in the types while leaving the read count exactly where it was.",
+      "contractChanged": false
+    },
+    {
+      "defect": "The instrument printed \"The the contract's own parameters could not be read, so this panel states nothing about it in either direction.\" `ReadUnavailableRow` supplies its own article, and this one caller supplied a second.",
+      "fix": "One word removed at src/app/docs/page.tsx:341.",
+      "consequence": "Worth recording for how it was found rather than for what it was. Review did not find it and could not easily have: a refusal sentence renders exactly when something has already gone wrong, so it is the least exercised prose in the build and the most closely read when it appears. It surfaced because an e2e run exhausted the read budget and drove the branch for real. Now guarded by a scan in tests/frontend/read-classification.test.ts that reads every `subject=` call site out of the source and fails any that begins with an article, with a floor of five sites so the scan cannot pass by finding nothing. Seven sites exist and this was the only one carrying its own article. Proven by reintroducing the defect: 9 passed, 1 failed, with the file, the subject and the consequence in the message.",
+      "contractChanged": false
+    }
+  ],
+
+  "ci": {
+    "$comment": "Every layer that runs without a network, and the one that needs an origin, with what was actually run rather than what could be.",
+    "layers": [
+      {
+        "layer": "frontend",
+        "command": "npm test",
+        "runner": "node --experimental-strip-types --test tests/frontend/*.test.ts",
+        "result": "242 passed, 0 failed",
+        "note": "node --experimental-strip-types cannot resolve the @/ alias, so anything reachable from these tests imports with relative paths and explicit .ts extensions. Several of these tests read contracts/Conveyance.py at test time and assert against its own constants and format strings, which is what keeps the two halves of a proof token from drifting apart."
+      },
+      {
+        "layer": "direct",
+        "command": "npm run test:direct",
+        "runner": "python -m pytest tests/direct -q",
+        "result": "96 passed",
+        "note": "The only layer that runs the contract under the real GenVM SDK, and therefore the only layer that could have measured Address.as_hex. It wipes conveyance/artifacts/ on every run, which is why no live capture is kept there."
+      },
+      {
+        "layer": "splice guard",
+        "command": "python conveyance/scripts/splice_rdap.py",
+        "checks": 13,
+        "tests": "35 collected, 33 passed, 2 skipped",
+        "regionSha256": "f5e052bcbacf3fd464ac32327f750a20a2a7998a3146c30489df62903ab4817a",
+        "regionMarkers": [79, 1201],
+        "regionCallables": "40 (37 def, 3 class), matching EMBEDDED_FUNCTION_COUNT and the deployed parameters().embedded_function_count",
+        "mutableExempt": ["DOH_ENDPOINTS", "DOH_HEADERS", "_DOMAIN_LABEL_OK"],
+        "note": "The region digest did not move across the casing fix, because _proof_token sits below the region end at line 1201. That is the guard behaving correctly: it pins the spliced RDAP code, not the contract around it.",
+        "theTwoSkips": "rdap-pending-transfer and rdap-transfer-complete. See notProvenOnChain."
+      },
+      {
+        "layer": "captured evidence",
+        "command": "npm run verify:fixtures",
+        "runner": "python scripts/verify_fixtures.py",
+        "result": "9/11 captures pinned, 2 waiting on a real transfer, 0 problems",
+        "whatItPins": "Every captured body's byte count and full sha256 against the bytes on disk; that the shipped captures are byte-identical to _build/fixtures/conveyance/, which tests/direct/evidence.py's header claims and nothing previously checked; that every recorded captured_url is matched by one of the URL_* patterns read out of evidence.py itself; that no capture on disk is unreferenced; and that the two uncaptured transfer routes are STILL uncaptured.",
+        "whyTheInvertedCheck": "The two transfer routes are the flagship artefact and they do not exist yet. A checker that only verified present captures would report nine of eleven forever and then, the day a body appeared beside a `TO FILL` URL, report ten with no comment. So the blocked pair is asserted absent: a body next to a placeholder URL is a fixture whose provenance nobody can state, and it fails.",
+        "whatItFound": "Two defects in the manifest, both of the class a reader misses and a checker does not. `doh-disagreement` declared `capture` twice, and JSON is specified to keep the last value, so the first block was dead code that looked live. And five of the nine present captures recorded a 32-character sha256, which is half a digest, while four recorded none at all. Every recorded prefix did match its file, so the truncation was truncation rather than a wrong value. All nine now carry the full 64.",
+        "note": "Reachability is deliberately not checked here. That needs the real matcher in _build/harness/harness.py, and a second copy of the matching rule would drift, in the one place whose job is to notice drift. It is proven by `python _build/harness/verify_fixtures.py conveyance`, which routes each route's own representative URL through FixtureNetwork._match. Running that exposed a third defect, in the shared tool itself: it counted the blocked pair as a problem in its body pass and as `wait` in its routing pass, so one run said failure in its exit code and waiting in its prose, contradicting its own docstring. Holdfast (16/16) and quorum-clean (10/10) were unaffected either way."
+      },
+      {
+        "layer": "prose",
+        "command": "npm run verify:emdash",
+        "result": "85 files scanned, 0 em dashes"
+      },
+      { "layer": "types", "command": "npm run typecheck", "result": "clean" },
+      { "layer": "lint", "command": "npm run lint", "result": "clean" },
+      { "layer": "build", "command": "npm run build", "result": "clean, 7 routes" },
+      { "layer": "deployed source", "command": "npm run verify:deployment", "result": "pass against 0x104767ad5d51b5004953e4fB9d5B548501aa9bd9" },
+      { "layer": "deployed schema", "command": "npm run verify:schema", "result": "pass against 0x104767ad5d51b5004953e4fB9d5B548501aa9bd9" },
+      { "layer": "live chain", "command": "npm run verify:studionet", "result": "all assertions passed across 9 transactions and 5 reads" }
+    ],
+    "e2e": {
+      "command": "npx next start -p 3210, then npx playwright test",
+      "runner": "@playwright/test 1.62.1, chromium, 1 worker",
+      "origin": "http://localhost:3210",
+      "whyNotAPublicOrigin": "Conveyance is not published anywhere. playwright.config.ts previously defaulted to a Vercel hostname carried over from Recourse, which does not resolve for this project, so a bare `npx playwright test` failed on DNS against an origin that was never ours. Publishing to an external service was not in scope and was not done unasked, so the default is now a local production server and the config states which properties a local origin therefore cannot reach. E2E_BASE_URL points the same suite at a real origin the day there is one.",
+      "result": "29 tests, 27 passed, 2 recovered on retry, 0 failed. Exit 0. 3.9 minutes.",
+      "routesVerified": [
+        "/ served 200, live strip present, fixture and misconfigured strips absent, footer links 0x104767ad5d51b5004953e4fB9d5B548501aa9bd9",
+        "/deals served 200, same three assertions",
+        "/deals/new served 200, same three assertions",
+        "/docs served 200, same three assertions"
+      ],
+      "routesVerifiedNote": "Four routes, each asserted live rather than fixture-backed, each asserted to carry the network label this build deployed to, and each asserted to link this commit's contract with the address compared as bytes rather than as whatever casing the environment holds. /deals/[id] is reached through the register rather than by a literal id, so the suite follows a redeployment instead of asserting against a dead one.",
+      "corsVerified": false,
+      "corsNote": "NOT VERIFIED, and not verifiable here. Recourse recorded a CORS preflight from its published origin against the GenLayer RPC. A preflight is a property of a browser origin talking to a third-party host, and localhost is not the origin a reviewer would use, so running one here would prove something about a machine rather than about a deployment. Recorded as false rather than dressed up as covered.",
+      "alsoNotVerified": "Anything belonging to a deployment: CDN behaviour, serverless cold starts, edge caching, and the response headers a host adds. The five contract-reading routes are all `force-dynamic`, which the build output confirms, and `Cache-Control: private, no-cache, no-store, max-age=0, must-revalidate` was measured locally, but nothing here proves a host would not override it.",
+      "theTwoRecoveries": {
+        "tests": [
+          "the register: a StudioNet deal renders its whole record",
+          "the instrument: the no-model claim is the deployment's own answer, not the page's"
+        ],
+        "cause": "StudioNet's read budget, not a defect. All four failing executions carried the same sentence, read out of the captured page context: `An unknown RPC error occurred. Details: Rate limit exceeded: 30 requests per minute Version: viem@2.55.19`. Every route is force-dynamic and reads the contract on each request, so a full pass of this suite spends far more than thirty reads and competes with itself for the budget. Both tests passed once the budget refilled.",
+        "whatItAccidentallyProved": "The strongest evidence in the build that the read path is correct, and the only place it is exercised against a real adverse network rather than a constructed one. Under the rate limit the docs panel printed `[EXTERNAL] Read failed` beside the node's own sentence, and said the parameters could not be read so the panel states nothing about them in either direction. A transport fault reported as a transport fault. That is precisely the property live-reads.ts was changed to preserve after `readMaybe` was collapsing five unrelated RPC failures into NOT_FOUND, and it held.",
+        "whatWasChangedBecauseOfIt": "Not the retries, which are the right response to a budget that refills. What was wrong is what the report said afterwards: Playwright called both tests `flaky` and stopped there, and `flaky` is the label that gets a real regression ignored, because the next reader cannot tell a read budget from a broken read path. tests/e2e/read-budget.ts now reads the cause off the failed page and records it twice, as a structured annotation for the HTML and JSON reporters and as a printed line for the `list` reporter, which shows no annotations at all. It cannot turn a red into a green: a budget exhaustion that survives both retries still fails the run.",
+        "provenDeterministically": "The budget was exhausted on purpose with 40 concurrent requests to /docs, then the single test was run with --retries=0. Measured: exit 1, and the cause printed by name in the list output. The JSON reporter recorded `status: failed` with the annotation `type: read budget` attached. Run again after the budget refilled, the same test passed with no note printed, so the diagnostic does not fire on a pass.",
+        "alsoChanged": "workers is now 1 rather than undefined. Concurrency buys nothing here: the bottleneck is thirty reads a minute shared across every worker, so a second worker halves each one's share and doubles the retries."
+      },
+      "whatThisSuiteDoesNotDo": "It sends no transaction. The injected wallet the wallet tests install answers eth_requestAccounts, eth_chainId and wallet_switchEthereumChain and throws -32601 on everything else, so a signing path cannot be reached even by accident and the suite costs no GEN however often it runs. The one control in this interface that sends value is disabled until a rehearsal has run, and it is touched only to prove it is closed.",
+      "gatedBy": "DEPLOYMENT.json, which the suite reads to know which contract and which network it is asserting against."
+    },
+    "provider": null,
+    "providerNote": "No CI provider runs against this tree, because it is not under version control and has no remote. Recourse could name GitHub Actions run ids and did. Here the layers above are the whole verification story, each one a command a reviewer can run, and no green badge is claimed."
+  },
+
+  "historicalDeployments": [
+    {
+      "contract": "0xC162BA113137539fD734e986403C1FA5fAbA6109",
+      "deploymentTransaction": "0x2ca51716f36f14be5a21d0e07d2e4497f7189fb943ab2b130ad619215cfecd5e",
+      "supersededOn": "2026-08-31",
+      "supersededBecause": "The seller proof token was stored EIP-55 checksummed while the interface displayed it lowercased, so every deal it opened named a seller who could not arm it. See sellerTokenCasingDefect.",
+      "finalLedger": { "balance": "300000000000000000", "held": "300000000000000000", "deals_opened": "2" },
+      "valueStranded": "NO",
+      "evidenceNote": "Its transactions prove the behaviour of this contract only. They are kept because they are true. Its two deals carry the same ids as the current deployment's two deals, and they are not the same deals; they live at a different address. Its arity-crash transaction 0xdb412812c8c9210d508ce15ab5410435eec39d08a9e2dd60d21f4f93c493bf0f has a payload byte-identical to the current deployment's, which is precisely why the exercise script checks the recipient of every hash it is given."
+    },
+    {
+      "contract": "0x07a615f2F2D7fC48AF2630b410e403a82B1d261b",
+      "deploymentTransaction": "0x9630eb9a30066d391608f88fc2fbc954e61f6701eb41ea2d20725a1a400ab953",
+      "supersededOn": "2026-08-31",
+      "supersededBecause": "open_deal refused invalid input by raising, after gl.message.value had already arrived. StudioNet rolls storage back on a revert but does not return the value, so a caller who was turned down lost their escrow into the contract with no way to retrieve it.",
+      "finalLedger": { "balance": "350000000000000000", "held": "300000000000000000" },
+      "strandedValue": {
+        "amountWei": "50000000000000000",
+        "amountGen": "0.05",
+        "howItWasMeasured": "ledger() reported balance 350000000000000000 against held 300000000000000000. The 50000000000000000 gap is the difference, and unlike the transient gap described under refundAtFinalization it never closed.",
+        "transaction": "0xde1d4a9845eb69e24cd160139d41cc5a6dc704e1fc2dd709963eb7fa88b97698",
+        "whyNotRefunded": "A `raise gl.vm.UserError` is not an EVM revert, so the value had already moved and stayed.",
+        "recoverable": false,
+        "recoverableWhy": "The contract has no sweep or admin-withdraw path, and that is deliberate: an owner who can move escrowed funds is a worse problem than 0.05 GEN of simulated network value stranded on a superseded address. The amount is recorded here rather than written off silently.",
+        "fixedOnCurrentDeployment": "Yes, and proven live. _decline refunds and returns rather than raising. See fundedRefusal."
+      },
+      "otherTransactions": [
+        { "hash": "0x25c85a43dd7567e668625c56a3b5f04d2168aea74a0b7e76c68cb7d86ea3bcd7", "what": "its first live open_deal" },
+        { "hash": "0xc87f85e81359852242715d370ea99655ee9f43606e9f02bb7740093add2cb6dd", "what": "open on a second TLD" },
+        { "hash": "0xac04d2ab057be5a21c1dbd611e851148e874b50d72a47da813ae7b739bf37105", "what": "the retry that was accepted after the refusal above" },
+        { "hash": "0x0613cc9deed0eaac17460d6217d7fd3f9d7437801e8faea6213dd25aeec65c06", "what": "abandon" }
+      ]
+    },
+    {
+      "contract": "0xB869533BEE20269514c7552dc85215e10d8b7A75",
+      "deploymentTransaction": "0xbdeeabdc6aa33dbe762e766ec4bbe4498d075b38af108ffb9f5639d49d616d4d",
+      "supersededOn": "2026-08-31",
+      "supersededBecause": "A defect in the per-domain deal index.",
+      "evidenceNote": "Superseded early, before the exercise captures now kept under _build/conveyance-evidence/ were taken against it, so it has no live behaviour recorded here beyond its deployment. It is listed because omitting a deployment that existed would make the count of deployments wrong."
+    }
+  ],
+
+  "failedDeployment": {
+    "$comment": "Listed separately from historicalDeployments on purpose. Calling this superseded would imply it ever ran.",
+    "contract": "0x513B913dfbCB1790a35630f100CB59140a67B4ba",
+    "deploymentTransaction": "0x3bd1eee78027cf2b69e4be64334d21c23be5745ec7f79346b84c43a70d6524bb",
+    "whatHappened": "The deploy reported ACCEPTED, then FINALIZED, and returned this address. Nothing was registered at it and no method could be called.",
+    "cause": "The source was missing the GenVM runtime pin, the `# { \"Depends\": \"py-genlayer:...\" }` first line.",
+    "whyItIsRecorded": "Because it failed like a success, which is the most expensive kind of failure to diagnose twice. Every contract in this repository now carries the pin."
+  },
+
+  "notProvenOnChain": [
+    "THE ENTIRE DELIVERY LIFECYCLE. NOT PROVEN LIVE: arm, check_transfer, settle in its succeeding direction, and refund in its succeeding direction. All four require actual DNS control of the domain under deal, because arming means publishing a TXT record under a name the contract derives and check_transfer means the registry RDAP record actually changing registrar. example.com and example.net are IANA reserved names; nobody can publish under them and nobody can transfer them. This is not a gap that better testing closes, it is the point at which the product needs a real domain. The two deals left OFFERED on the current deployment are exactly one seller action away from the rest of the lifecycle, and that action is not one this repository can take.",
+    "THE REAL TRANSFER FIXTURES. rdap-pending-transfer and rdap-transfer-complete are uncaptured. Both carry `captured_url: \"TO FILL: the real transfer domain\"` and `routing: blocked`, and require_capture() raises FixtureNotCaptured for them, so they are the two skips in the 35-test splice suite. They will never pass on a placeholder: the routing flips from blocked to prefer only when the URL is real. A cross-registrar transfer of a domain the author controls is the intended source, and until it happens these two states are covered by direct tests against hand-built records and by nothing else. Recording them as skips rather than deleting them is the honest option, because a deleted test does not show up as missing.",
+    "THE SUCCESSFUL TIME-GATE BRANCH. refund() was exercised live only in its refusing direction, against an acceptance window that is still open. The window closes on 2026-09-02T02:21:41Z for deal 1 and 2026-09-02T02:22:43Z for deal 2. Passing the gate is covered by direct tests.",
+    "A REVERSAL. reversals_recorded is 0. A reversal means a domain that verified and then moved again inside the inspection window, which needs a real transfer to happen first and then be undone. Direct tests cover the branch.",
+    "THE [EXTERNAL] AND [LLM_ERROR] TAGS. Only [EXPECTED] was produced live. [EXTERNAL] needs a source to fail to answer during a consensus round, which cannot be arranged against IANA and Verisign on demand, and [LLM_ERROR] cannot occur at all on this contract because parameters().uses_a_model is false and no model is ever consulted. The tag exists in the taxonomy for completeness and is declared rather than reachable, which is stated here so its absence from the live set is not read as a missing test.",
+    "TWO http-ONLY REGISTRY BASES. The kg and mg TLDs publish RDAP bases over http:// with no https:// alternative. registry_base_for_domain fails closed on them rather than downgrading, so a deal on a .kg or .mg domain is refused. This was read out of the live IANA bootstrap, not invented, but no live deal was opened against either TLD to demonstrate the refusal on chain."
+  ],
+
+  "knownStaleTextInTheDeployedSource": {
+    "$comment": "One wrong number in the deployed contract's own docstring, recorded here rather than corrected, and the reasoning is the point.",
+    "what": "contracts/Conveyance.py says the spliced evidence path is unit-tested standalone with `39 tests` and that splice_rdap.py `re-runs all 39 tests` against the shipped copy. It is three occurrences, at lines 57, 59 and 76. The suite actually collects 35: 33 passed and 2 skipped, the two skips being the uncaptured transfer fixtures.",
+    "isTheGuardWrongToo": "No. scripts/splice_rdap.py counts at run time and prints what it found, and its own docstring at line 54 states 33 passed and 2 skipped correctly. Nothing asserts 39, so nothing was passing on a false number. The stale figure is prose in a docstring and appears nowhere that executes.",
+    "whyItIsNotFixed": "The file is byte-locked to the deployment. DEPLOYMENT.json records contractBytes 130892 and contractSha256 7bc4452dc063afdd1a3a85f2e465b2ef263d236a5f1a92352e3af2d4ec3b501d, and `npm run verify:deployment` re-reads the deployed code off the chain and compares it byte for byte. Editing one character in a comment changes the digest, breaks that parity, and can only be restored by a fifth deployment. A fifth deployment would invalidate all nine asserted transaction hashes, both demonstration deals, the value ledger and every measurement in this file, to correct a count in a comment. That trade is not worth making, so the number stays wrong and is written down here instead.",
+    "whenItIsFixed": "On the next deployment made for a reason that justifies one. Not before.",
+    "howItWasFound": "By checking a figure in the contract header against a measurement while writing the README, rather than by repeating it. It is recorded because a reviewer who runs the standalone suite will see 35 and should find the discrepancy already accounted for rather than discover it."
+  }
+}

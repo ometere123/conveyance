@@ -1,0 +1,316 @@
+{
+  "project": "conveyance",
+  "sources": "genlayer-prds/05-asset-escrow.md, re-verified live 2026-08-25",
+  "note": [
+    "Two independent source families, and the separation is the product: RDAP is registry state,",
+    "DoH TXT is delegation state. A transfer that shows in one and not the other is precisely the",
+    "condition the contract must refuse to settle on, so the fixture set has to be able to",
+    "represent disagreement between them. Hence separate routes rather than one blended capture.",
+    "",
+    "The pending-transfer records are captured live from a real cross-registrar transfer in",
+    "progress, so their timestamps are not knowable in advance. Capture them as the transfer moves",
+    "and record the wall-clock fetch time in each entry's note.",
+    "",
+    "Cloudflare DoH returns 400 without an explicit Accept: application/dns-json header. That is",
+    "reproduced here through requires_header so a future edit that drops the header fails on a",
+    "laptop instead of inside a consensus round.",
+    "",
+    "MEASURED 2026-08-25, and load bearing: the two resolvers format the same TXT record",
+    "differently. Cloudflare wraps each character-string in literal double quotes and Google does",
+    "not, so the identical record arrives as 13 bytes from one and 11 from the other. Cloudflare",
+    "reports its own remaining cache TTL while Google reports the authoritative 300. Google adds a",
+    "Comment naming the answering resolver IP and Cloudflare omits it. Google keeps the trailing",
+    "root label on the query name and Cloudflare drops it. A contract that compares the data field",
+    "byte for byte therefore reads two agreeing resolvers as a disagreement, escalates to",
+    "[EXTERNAL], and stalls a transfer that was fine. Normalization before comparison is required.",
+    "",
+    "RECAPTURED VERBATIM 2026-08-25, and this is the finding the recapture produced. The manifest",
+    "used to carry two byte counts per DoH route, measured_bytes and captured_bytes, and they",
+    "disagreed: 278 against 276 for Cloudflare and 324 against 315 for Google. The assumption was",
+    "that the capture had round-tripped the JSON through a serializer. It had not. Re-fetching both",
+    "byte verbatim gave 278 and 316, and both gaps are fully accounted for by fields that carry no",
+    "meaning:",
+    "",
+    "  * Cloudflare 276 -> 278. TTL was 58 at the first capture and 299 at the second. Three digits",
+    "    instead of two, two answers in the record, so exactly two bytes.",
+    "  * Google 315 -> 316. TTL is 300 both times, because Google reports the authoritative value",
+    "    rather than remaining cache time. The Comment changed from 'Response from 173.245.58.162.'",
+    "    to 'Response from 108.162.195.228.', one character longer, so exactly one byte. A later",
+    "    capture in the same session answered from 2001:503:231d::2:30, which is longer still.",
+    "",
+    "So the length of a DoH response is not a stable quantity, and the 324 that nothing on disk",
+    "ever matched was most likely a capture whose Comment named a longer resolver address. The",
+    "consequence is stronger than the original TTL rule and it belongs in the contract: the raw",
+    "DoH body must never be hashed, length-capped by equality, or compared across resolvers at all.",
+    "Only the normalized record set may be. Two validators fetching microseconds apart across a TTL",
+    "digit boundary would otherwise disagree on a digest, which is a consensus failure caused",
+    "entirely by a field neither of them should have been reading. rdap.py already excludes 'HTTP",
+    "response headers and body length' in PROOF_EXCLUDED, so the module was right before the",
+    "measurement existed to justify it.",
+    "",
+    "Every route now records captured_url. Without it a route pattern could only be checked against",
+    "a guess at the query that produced the body, and three routes in the previous version were",
+    "unreachable for exactly that reason: they discriminated on uppercase tokens (NOTFOUND, PENDING,",
+    "NXDOMAIN, DISAGREE) that no contract would ever put in a URL, and they sat after broader",
+    "patterns that matched first. See the per-route superseded_route notes.",
+    "",
+    "AND NOW SOMETHING READS THIS FILE, which for a long time nothing did. Every byte count and",
+    "digest above was prose: an integrity claim about eleven routes that no code checked, so a",
+    "capture could have been reformatted, truncated or replaced and the suite would still have",
+    "passed, because the tests read the bodies and this file describes them. Two checkers now split",
+    "the work, and the split is stated so silence is not mistaken for coverage.",
+    "",
+    "  * scripts/verify_fixtures.py, run by npm run verify:fixtures, pins the bytes. It refuses a",
+    "    duplicate key, recomputes every size and sha256 against disk, proves this directory is",
+    "    byte-identical to _build/fixtures/conveyance/ as tests/direct/evidence.py's header claims,",
+    "    checks every captured_url against evidence.py's own URL patterns, and asserts the two",
+    "    transfer routes still declare themselves uncaptured, so a body appearing beside a TO FILL",
+    "    URL fails instead of quietly becoming the tenth capture.",
+    "  * _build/harness/verify_fixtures.py conveyance proves reachability, by routing each route's",
+    "    representative URL through the real FixtureNetwork._match rather than a second copy of the",
+    "    matching rule. It is the tool that found the five unreachable routes recorded above.",
+    "",
+    "Writing the first of those found two defects in this file, both invisible to a reader. The",
+    "doh-disagreement entry declared capture twice, and JSON keeps the last value, so the first block",
+    "was a dead line that looked live; editing it would have changed nothing. And five of the nine",
+    "present captures recorded a 32-character sha256, which is half a digest, while four recorded",
+    "none. Every recorded prefix did match its file, so the truncation was truncation rather than a",
+    "wrong value, and all nine now carry the full 64. Three bodies stay marked verbatim: not",
+    "re-verified, which is a different claim from the digest and is left standing as one: the digest",
+    "pins the bytes on disk against drift, and says nothing about whether those bytes are what the",
+    "registry sent."
+  ],
+  "routing": [
+    "Matched in list order, first match wins, so specific routes come before broad ones. Three",
+    "routes cannot be reached by URL at all, because they are the SAME URL as another route at a",
+    "different moment in time: rdap-pending-transfer and rdap-transfer-complete are the baseline",
+    "domain mid-transfer and after it, and doh-disagreement is the Google query with one TXT value",
+    "changed. A URL-keyed fixture table cannot express 'later', so those three are selected with",
+    "FixtureNetwork(prefer=[...]) instead, which tries the named routes before the manifest order.",
+    "An unknown name in prefer raises immediately rather than falling through to the baseline,",
+    "because a typo that silently served the baseline would let a test claim it exercised the",
+    "pending-transfer path while reading the pre-transfer record."
+  ],
+  "routes": [
+    {
+      "name": "iana-bootstrap",
+      "url": "https://data.iana.org/rdap/dns.json",
+      "method": "GET",
+      "status": 200,
+      "body": "iana-rdap-bootstrap.json",
+      "capture": {
+        "captured_url": "https://data.iana.org/rdap/dns.json",
+        "bytes_on_disk": 71095,
+        "sha256": "fb297362ea4d0b627bd92fe18dc251a3af594fa60b0b7da58ff708181e3d7bb5",
+        "verbatim": "not re-verified. Harmless here: the contract extracts a base URL by field name, so a JSON round trip could not change what it reads. Recorded as bytes_on_disk rather than bytes_received so the distinction is not lost."
+      },
+      "note": "71 KB and it changes rarely. The contract must not fetch this per check: resolve once, store the registry base on chain at deal creation, and re-resolve only on a miss."
+    },
+    {
+      "name": "doh-cloudflare-nxdomain",
+      "pattern": "^https://cloudflare-dns\\.com/dns-query\\?(?=.*nonexistent-conveyance-fixture-xyz123\\.com)",
+      "method": "GET",
+      "status": 200,
+      "body": "doh-cloudflare-nxdomain.json",
+      "requires_header": { "Accept": "application/dns-json" },
+      "missing_header_status": 400,
+      "capture": {
+        "captured_url": "https://cloudflare-dns.com/dns-query?name=nonexistent-conveyance-fixture-xyz123.com&type=TXT",
+        "bytes_received": 273,
+        "sha256": "59e35321eb32107f7d49a48f4706bebb608ef4c5075a4afb53a488d81581f096",
+        "verbatim": true,
+        "when": "2026-08-25"
+      },
+      "expect": { "dns_status": 3, "has_Answer": false, "has_Comment": false },
+      "note": "Captured 2026-08-25 to close a real gap: only Google's NXDOMAIN existed, so a two-resolver corroboration of a name that does not exist could not be tested at all, because one side would raise FixtureMiss. An NXDOMAIN is the one response in this set that is reproducible on demand, so there was no reason for it to be missing. Cloudflare answers with no Comment and no Authority section, 273 bytes against Google's 322 for the same question, which is why one body cannot honestly serve both hosts."
+    },
+    {
+      "name": "doh-google-nxdomain",
+      "pattern": "^https://dns\\.google/resolve\\?(?=.*nonexistent-conveyance-fixture-xyz123\\.com)",
+      "method": "GET",
+      "status": 200,
+      "body": "doh-google-nxdomain.json",
+      "capture": {
+        "captured_url": "https://dns.google/resolve?name=nonexistent-conveyance-fixture-xyz123.com&type=TXT",
+        "bytes_received": 322,
+        "sha256": "29d91ed91f0aadc7b8ab469eb52af60c0fc08d1e3964b247d146357493441d4f",
+        "verbatim": true,
+        "when": "2026-08-25"
+      },
+      "expect": { "dns_status": 3, "has_Answer": false, "has_Authority": true },
+      "superseded_route": {
+        "name": "doh-nxdomain",
+        "pattern": "^https://(?:cloudflare-dns\\.com/dns-query|dns\\.google/resolve)\\?.*NXDOMAIN",
+        "body": "doh-nxdomain.json, deleted 2026-08-25",
+        "was_bytes_on_disk": 315,
+        "was_comment": "Response from 192.33.14.30.",
+        "why": "Unreachable twice over. It required the literal string NXDOMAIN in the URL while the captured question name was 'nonexistent-conveyance-fixture-xyz123.com.', which is lowercase, real and what a contract would actually query; and it sat after the two broad DoH routes, so even a URL containing NXDOMAIN would have matched doh-google-txt first and been served a NOERROR answer. A control fixture that cannot be reached is worse than a missing one: the suite looks like it covers the case."
+      },
+      "note": "Status 3 with no Answer array, served with HTTP 200. A control proof that cannot be found is [EXTERNAL] or a failed proof depending on which, and the contract must distinguish them. Google adds Authority and a Comment here; both are excluded from the proof comparison."
+    },
+    {
+      "name": "rdap-not-found",
+      "pattern": "^https://rdap\\.[a-z0-9.-]+/(?:[a-z]+/v1/)?domain/conveyance-fixture-not-registered-xyz123\\.com",
+      "method": "GET",
+      "status": 404,
+      "body": "rdap-not-found.json",
+      "capture": {
+        "captured_url": "https://rdap.verisign.com/com/v1/domain/conveyance-fixture-not-registered-xyz123.com",
+        "bytes_received": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "verbatim": true,
+        "when": "2026-08-25",
+        "registry": "Verisign, .com"
+      },
+      "expect": {
+        "classification": "[EXTERNAL]",
+        "must_not_be": "the domain is not under the seller's control"
+      },
+      "superseded_route": {
+        "pattern": "^https://rdap\\.[a-z0-9.-]+/(?:[a-z]+/v1/)?domain/.*NOTFOUND",
+        "why": "Required the literal string NOTFOUND in the URL, and sat after rdap-com-baseline whose pattern matches every Verisign domain path. Any URL a contract could build hit the 200 baseline first. The URL that produced the body was never recorded, so there was nothing to route on either; it has now been re-fetched and the URL is above."
+      },
+      "note": "A 404 says the registry has no record, which is not the same statement as a failed transfer. Absence is never success. VERIFIED live 2026-08-25: the body is genuinely 0 bytes with no Content-Length header, so Verisign answers a .com miss with no RFC 9083 error document at all. PIR returns a richer error object for the same condition, and this fixture deliberately keeps the emptier one: a parser that recognises failure by finding an errorCode field would pass against PIR and fall straight through against Verisign."
+    },
+    {
+      "name": "rdap-com-baseline",
+      "pattern": "^https://rdap\\.verisign\\.com/com/v1/domain/",
+      "method": "GET",
+      "status": 200,
+      "body": "rdap-com-baseline.json",
+      "capture": {
+        "captured_url": "https://rdap.verisign.com/com/v1/domain/example.com",
+        "bytes_on_disk": 2440,
+        "sha256": "e41d6b98e11688bd6c5648f5239d1176ce123c177e3875ac656a59bc706068b8",
+        "registry": "Verisign, .com",
+        "ldhName": "EXAMPLE.COM",
+        "verbatim": "not re-verified. Parsed by RFC 9083 field name, never hashed, so a round trip could not change a conclusion."
+      },
+      "expect": {
+        "byte_stable": true,
+        "events": ["registration", "expiration", "last changed"],
+        "status_flags_present": true
+      },
+      "note": "Verisign returns ldhName uppercased as EXAMPLE.COM while PIR returns example.org lowercased. Domain comparison is therefore case-folded, not string-equal, and this pair of fixtures is what proves it."
+    },
+    {
+      "name": "rdap-org-baseline",
+      "pattern": "^https://rdap\\.publicinterestregistry\\.org/rdap/domain/",
+      "method": "GET",
+      "status": 200,
+      "body": "rdap-org-baseline.json",
+      "capture": {
+        "captured_url": "https://rdap.publicinterestregistry.org/rdap/domain/example.org",
+        "bytes_on_disk": 7261,
+        "sha256": "e38b05716fd38400dd3cf0a1717eb56d15d6815350c76d7b27b757e5b98fcdf7",
+        "registry": "PIR, .org",
+        "ldhName": "example.org",
+        "verbatim": "not re-verified, same reasoning as the .com baseline."
+      },
+      "note": "A second registry with a different response shape and 3x the byte count for the same question. It also returns a `redacted` array and a `unicodeName` that Verisign omits. Parsing must be driven by the RFC 9083 field names, never by offsets or by one registry's ordering."
+    },
+    {
+      "name": "rdap-pending-transfer",
+      "pattern": "^https://rdap\\.[a-z0-9.-]+/(?:[a-z]+/v1/)?domain/",
+      "method": "GET",
+      "status": 200,
+      "body": "rdap-pending-transfer.json",
+      "routing": "blocked",
+      "routing_reason": "The representative URL is the real domain under transfer, which is not knowable until the transfer is initiated. Becomes routing prefer the moment capture.captured_url is real: the pending record and the settled record are one URL at two moments, so prefer is what selects between them, exactly as doh-disagreement does for the two resolver answers. Until then this route reports wait, and a placeholder that reported pass would be the one fixture in the set that lies about what was observed.",
+      "select_with": "prefer=[\"rdap-pending-transfer\"]",
+      "capture": { "live": true, "when": "TO FILL: wall clock at capture", "captured_url": "TO FILL: the real transfer domain" },
+      "expect": {
+        "status_contains": "pending transfer",
+        "note": "The flagship artefact. Captured from the real transfer while it is in flight."
+      },
+      "superseded_route": {
+        "pattern": "^https://rdap\\.[a-z0-9.-]+/(?:[a-z]+/v1/)?domain/.*PENDING",
+        "why": "Required the literal string PENDING in the URL. The pending record is the SAME domain as the baseline at a later moment, so no URL discriminator can exist without inventing one the contract would never emit. Selected with prefer instead."
+      },
+      "note": "Not yet captured. A test that needs it must skip with a message naming this route, never pass. The pattern is deliberately broad because prefer is what selects it; left in the list after both baselines so it cannot shadow them when prefer is unset."
+    },
+    {
+      "name": "rdap-transfer-complete",
+      "pattern": "^https://rdap\\.[a-z0-9.-]+/(?:[a-z]+/v1/)?domain/",
+      "method": "GET",
+      "status": 200,
+      "body": "rdap-transfer-complete.json",
+      "routing": "blocked",
+      "routing_reason": "The representative URL is the real domain under transfer, which is not knowable until the transfer is initiated. Becomes routing prefer the moment capture.captured_url is real: the pending record and the settled record are one URL at two moments, so prefer is what selects between them, exactly as doh-disagreement does for the two resolver answers. Until then this route reports wait, and a placeholder that reported pass would be the one fixture in the set that lies about what was observed.",
+      "select_with": "prefer=[\"rdap-transfer-complete\"]",
+      "capture": { "live": true, "when": "TO FILL: wall clock at capture", "captured_url": "TO FILL: the real transfer domain" },
+      "expect": {
+        "events_contains": "transfer",
+        "registrar_changed": true,
+        "note": "The same domain after the transfer settles. The pair is what proves the contract watched a real transition rather than describing one."
+      },
+      "superseded_route": {
+        "pattern": "^https://rdap\\.[a-z0-9.-]+/(?:[a-z]+/v1/)?domain/.*COMPLETE",
+        "why": "Same reason as the pending route: a later state of one URL is not a different URL."
+      },
+      "note": "Not yet captured. Skip, never pass."
+    },
+    {
+      "name": "doh-cloudflare-txt",
+      "pattern": "^https://cloudflare-dns\\.com/dns-query\\?",
+      "method": "GET",
+      "status": 200,
+      "body": "doh-cloudflare-txt.json",
+      "requires_header": { "Accept": "application/dns-json" },
+      "missing_header_status": 400,
+      "capture": {
+        "captured_url": "https://cloudflare-dns.com/dns-query?name=example.com&type=TXT",
+        "bytes_received": 278,
+        "sha256": "4992701f1d82418e717b63555ae25226c7251256a3f0e854a59ec9ca21328c0a",
+        "verbatim": true,
+        "when": "2026-08-25",
+        "ttl_at_capture": 299,
+        "superseded_bytes": { "was_on_disk": 276, "was_declared": 278, "why": "TTL 58 at the first capture against 299 at the second. Two digits against three, two answers, so exactly two bytes. The declared 278 was right and the file was a different moment, not a different serializer." }
+      },
+      "note": "Quotes its TXT character-strings, so data arrives as \"v=spf1 -all\" with literal quote bytes included. Drops the trailing root label from the query name. Reports its own remaining cache TTL, so the response length changes as the cache ages. All three facts are excluded from the proof comparison.",
+      "expect": { "has_Answer": true, "txt_quoted": true, "qname_has_root_label": false }
+    },
+    {
+      "name": "doh-google-txt",
+      "pattern": "^https://dns\\.google/resolve\\?",
+      "method": "GET",
+      "status": 200,
+      "body": "doh-google-txt.json",
+      "capture": {
+        "captured_url": "https://dns.google/resolve?name=example.com&type=TXT",
+        "bytes_received": 316,
+        "sha256": "bd85fe74d58cb0996418b34b742f43ff814d144074fd5a2e9d4ba7fcc190b92a",
+        "verbatim": true,
+        "when": "2026-08-25",
+        "ttl_at_capture": 300,
+        "comment_at_capture": "Response from 108.162.195.228.",
+        "superseded_bytes": { "was_on_disk": 315, "was_declared": 324, "why": "TTL is 300 both times, because Google reports the authoritative value rather than remaining cache time. The one-byte change is the Comment: 'Response from 173.245.58.162.' became 'Response from 108.162.195.228.'. The declared 324 matches neither and is most likely a capture answered from a longer address; one call in the same session came from 2001:503:231d::2:30. Left unexplained rather than given a cause it was not measured to have." }
+      },
+      "note": "Google needs no Accept header, Cloudflare does. Two resolvers with two different contracts for the same query is the reason corroboration is worth anything here. Google does not quote its TXT strings, keeps the trailing root label, reports the authoritative TTL, and adds a Comment naming the answering resolver IP. The Comment is the reason the raw body must never be hashed: it changes with which anycast node answered, which is not a fact about the domain.",
+      "expect": { "has_Answer": true, "txt_quoted": false, "qname_has_root_label": true, "has_Comment": true }
+    },
+    {
+      "name": "doh-disagreement",
+      "pattern": "^https://dns\\.google/resolve\\?",
+      "method": "GET",
+      "status": 200,
+      "body": "doh-disagreement.json",
+      "routing": "prefer",
+      "select_with": "prefer=[\"doh-disagreement\"]",
+      "capture": {
+        "example": "https://dns.google/resolve?name=example.com&type=TXT",
+        "example_note": "Byte-identical to doh-google-txt's captured_url, which is the point rather than an oversight: a disagreement is the same query answered differently, so no URL can tell the two routes apart and prefer is the only thing that selects between them. _build/harness/verify_fixtures.py routes this URL twice, once with prefer and once without, and prints which route wins each time.",
+        "derived_from": "doh-google-txt.json",
+        "bytes_on_disk": 370,
+        "sha256": "fa9ceb0d15f0a727e5670d78f61250daca8de9e3780cbf8f4e7fd4ca0c7fad02",
+        "verbatim": false
+      },
+      "expect": { "corroborated": false, "outcome": "refuse to settle" },
+      "superseded_route": {
+        "pattern": "^https://dns\\.google/resolve\\?.*DISAGREE",
+        "why": "Required the literal string DISAGREE in the URL and sat after doh-google-txt, which matches every Google resolve query. Unreachable on both counts. A disagreement is the same query answered differently, so like the transfer phases it is selected with prefer rather than by URL."
+      },
+      "note": "Synthetic on purpose: the real world will not produce this on demand, and the refusal path must still be tested. Derived mechanically from the real Google capture with only the two TXT values substituted, so agreement and disagreement differ in exactly one respect. An earlier hand-authored version was rebuilt for two reasons: it was malformed JSON, having used Google-quoted TXT syntax without escaping the inner quotes, and it was quoted where the real Google capture is not, which would have let a refusal be blamed on quote handling rather than on the record value. The substituted name is under .invalid, which RFC 2606 reserves so a fabricated name can never collide with a real one. It is derived from the 315-byte capture rather than the current 316-byte one, which is harmless because nothing compares its length to anything."
+    }
+  ]
+}

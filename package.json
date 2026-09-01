@@ -1,0 +1,42 @@
+{
+  "name": "conveyance",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "verify:schema": "node scripts/verify-schema.mjs",
+    "verify:deployment": "node scripts/verify-deployment-source.mjs",
+    "verify:studionet": "node scripts/exercise-studionet.mjs",
+    "verify:emdash": "python scripts/emdash-check.py .",
+    "verify:fixtures": "python scripts/verify_fixtures.py",
+    "test:direct": "python -m pytest tests/direct -q",
+    "test": "node --experimental-strip-types --test tests/frontend/*.test.ts",
+    "test:e2e": "playwright test",
+    "verify": "npm test && npm run test:direct && npm run verify:fixtures && npm run verify:emdash && npm run typecheck && npm run lint && npm run build",
+    "check": "npm run verify"
+  },
+  "dependencies": {
+    "genlayer-js": "1.1.8",
+    "lucide-react": "^1.27.0",
+    "next": "16.3.2",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.3.2",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

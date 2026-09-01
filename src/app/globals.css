@@ -1,0 +1,513 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   Conveyance — a security-engraved plate.
+
+   Transferring a domain is executing an instrument of title, and instruments of
+   title are intaglio-engraved because the printing is the proof. The ground is a
+   deep green-black plate ink; the fine guilloche linework that makes such a
+   document hard to forge only reads against it.
+
+   Measured contrast, and the constraints it imposes:
+
+     document on plate      12.14:1   all body text
+     document on plate-2    10.95:1   all body text on a raised panel
+     document-dim on plate   6.82:1   labels, asides, secondary records
+     gold on plate            5.75:1   safe for text, and still used exactly once
+     guilloche on plate       3.48:1   linework, borders, arcs. NEVER body text
+     seal on plate            1.90:1   FAILS. Oxblood may never sit on the plate
+     seal on document         6.37:1   oxblood only on document-toned surfaces
+
+   The last two are why a dispute is rendered on an inset document-tone panel. It
+   looks like a filing printed on paper laid into the plate, which is what a
+   dispute is.
+   ========================================================================== */
+
+@theme inline {
+  --color-plate: #0e1a16;
+  --color-plate-2: #16241f;
+  --color-guilloche: #2c7a6b;
+  --color-document: #d9d5c8;
+  --color-seal: #7e2a24;
+  --color-gold: #b08d4f;
+
+  --font-display: var(--font-bodoni), "Bodoni MT", Didot, Georgia, serif;
+  --font-body: var(--font-literata), "Iowan Old Style", Charter, Georgia, serif;
+  --font-record: var(--font-fragment), "Cascadia Mono", Consolas, monospace;
+
+  --breakpoint-plate: 900px;
+}
+
+:root {
+  /* The three faces this system specifies are Bodoni Moda, Literata and Fragment
+     Mono, all open-licensed and self-hostable. They are named first here and
+     picked up wherever they are installed or self-hosted; the fallbacks are a
+     didone, a text serif and a fixed face, so the cascade degrades within family
+     rather than across it. No build-time dependency on a font CDN. */
+  --font-bodoni: "Bodoni Moda", "Bodoni Moda SC";
+  --font-literata: "Literata", "Literata 24pt";
+  --font-fragment: "Fragment Mono";
+
+  --plate: #0e1a16;
+  --plate-2: #16241f;
+  --guilloche: #2c7a6b;
+  --document: #d9d5c8;
+  --seal: #7e2a24;
+  --gold: #b08d4f;
+
+  /* Measured 6.82:1 on the plate. The dimmest tone in the system that is allowed
+     to carry text; nothing quieter than this ever holds a word. */
+  --document-dim: color-mix(in srgb, var(--document) 72%, var(--plate));
+
+  /* Engraved rules. Guilloche at full strength for a structural rule, halved for
+     a subdivision inside a panel. Both are linework and neither carries text. */
+  --rule: color-mix(in srgb, var(--guilloche) 46%, var(--plate));
+  --rule-strong: var(--guilloche);
+
+  /* The document-tone inset a filing is printed on. Oxblood lives only here. */
+  --filing: var(--document);
+  --filing-rule: color-mix(in srgb, var(--seal) 40%, var(--document));
+}
+
+* {
+  border-color: var(--rule);
+}
+
+html {
+  background: var(--plate);
+  color: var(--document);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--plate);
+  color: var(--document);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 27px;
+  font-weight: 400;
+}
+
+/* --------------------------------------------------------------------------
+   Type scale: 11 · 13 · 16 · 22 · 52. Nothing else.
+
+   Bodoni appears in exactly one place per page: the asset being conveyed, set
+   large. It is a didone, the engraver's letterform, with the hairline-to-stem
+   contrast that comes from cutting into a plate.
+   -------------------------------------------------------------------------- */
+
+.cv-asset {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 52px;
+  line-height: 54px;
+  letter-spacing: -0.01em;
+}
+
+.cv-heading {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 22px;
+  line-height: 30px;
+  letter-spacing: -0.005em;
+}
+
+.cv-body {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 27px;
+}
+
+.cv-aside {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 21px;
+  color: var(--document-dim);
+}
+
+.cv-record {
+  font-family: var(--font-record);
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 20px;
+  font-variant-numeric: tabular-nums;
+}
+
+.cv-record-sm {
+  font-family: var(--font-record);
+  font-weight: 400;
+  font-size: 11px;
+  line-height: 18px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Engraved caption lettering. Letterspaced small caps, the register a plate
+   uses for a field name. */
+.cv-legend {
+  font-family: var(--font-record);
+  font-weight: 400;
+  font-size: 11px;
+  line-height: 16px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--document-dim);
+}
+
+.cv-legend-ink {
+  color: var(--document);
+}
+
+/* --------------------------------------------------------------------------
+   Grounds and panels. Wide horizontal panels, 1px guilloche rules, no radius
+   above 2px anywhere in the system.
+   -------------------------------------------------------------------------- */
+
+.cv-plate {
+  background: var(--plate);
+}
+
+.cv-panel {
+  background: var(--plate-2);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+}
+
+.cv-panel-engraved {
+  background: var(--plate-2);
+  border: 1px solid var(--rule-strong);
+  border-radius: 2px;
+}
+
+/* A filing: oxblood printing on laid paper, laid into the plate. The only
+   surface in the system on which --seal is legible, so the only one it appears
+   on. Disputes, and nothing else, are printed here. */
+.cv-filing {
+  background: var(--filing);
+  color: var(--plate);
+  border: 1px solid var(--filing-rule);
+  border-radius: 2px;
+}
+
+.cv-filing .cv-aside,
+.cv-filing .cv-legend {
+  color: color-mix(in srgb, var(--plate) 74%, var(--filing));
+}
+
+.cv-filing-mark {
+  color: var(--seal);
+}
+
+.cv-rule {
+  border-top: 1px solid var(--rule);
+}
+
+.cv-rule-strong {
+  border-top: 1px solid var(--rule-strong);
+}
+
+/* The guilloche band: the engraved linework a negotiable instrument carries at
+   its edge. Drawn from the ink itself so it cannot be mistaken for an image. */
+.cv-guilloche-band {
+  height: 6px;
+  background-image: repeating-linear-gradient(
+      115deg,
+      color-mix(in srgb, var(--guilloche) 62%, transparent) 0 1px,
+      transparent 1px 5px
+    ),
+    repeating-linear-gradient(
+      65deg,
+      color-mix(in srgb, var(--guilloche) 34%, transparent) 0 1px,
+      transparent 1px 7px
+    );
+}
+
+/* One 1px rule sweeping across a panel as it locks. Structure, not decoration:
+   with motion off the rule is simply present. */
+.cv-lockrule {
+  transform-origin: left center;
+  animation: cv-sweep 520ms ease-out forwards;
+}
+
+@keyframes cv-sweep {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Difference marks. Δ is redundant with the column layout, and every mark is
+   paired with a word, so nothing depends on hue alone.
+   -------------------------------------------------------------------------- */
+
+.cv-delta {
+  color: var(--document);
+  font-family: var(--font-record);
+  font-size: 13px;
+}
+
+.cv-unchanged {
+  color: var(--document-dim);
+}
+
+/* --------------------------------------------------------------------------
+   Controls. A rule, a ground, engraved lettering. No gradient, no shadow, no
+   radius above 2px.
+   -------------------------------------------------------------------------- */
+
+.cv-btn,
+.cv-btn-quiet,
+.cv-btn-seal {
+  font-family: var(--font-record);
+  font-size: 11px;
+  line-height: 16px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 11px 16px;
+  border: 1px solid var(--guilloche);
+  border-radius: 2px;
+  color: var(--document);
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    background-color 140ms ease-out,
+    border-color 140ms ease-out;
+}
+
+.cv-btn {
+  background: color-mix(in srgb, var(--guilloche) 22%, var(--plate));
+}
+
+.cv-btn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--guilloche) 34%, var(--plate));
+}
+
+.cv-btn-quiet {
+  border-color: var(--rule);
+}
+
+.cv-btn-quiet:hover:not(:disabled) {
+  border-color: var(--guilloche);
+}
+
+/* A dispute is a filing, so the control that opens one is printed on paper. */
+.cv-btn-seal {
+  background: var(--filing);
+  border-color: var(--filing-rule);
+  color: var(--seal);
+}
+
+.cv-btn-seal:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--filing) 88%, var(--seal));
+}
+
+.cv-btn:disabled,
+.cv-btn-quiet:disabled,
+.cv-btn-seal:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.cv-input,
+.cv-select,
+.cv-textarea {
+  width: 100%;
+  background: var(--plate);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: 9px 10px;
+  color: var(--document);
+  font-family: var(--font-record);
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.cv-select {
+  font-family: var(--font-body);
+  font-size: 16px;
+}
+
+.cv-textarea {
+  min-height: 6rem;
+  resize: vertical;
+}
+
+.cv-input::placeholder,
+.cv-textarea::placeholder {
+  color: var(--document-dim);
+}
+
+/* --------------------------------------------------------------------------
+   Focus, in this system's own ink. Never a browser default outline, and never
+   guilloche, which is too dark on the plate to serve as a focus indicator.
+   -------------------------------------------------------------------------- */
+
+:focus-visible {
+  outline: 2px solid var(--document);
+  outline-offset: 2px;
+  border-radius: 1px;
+}
+
+.cv-filing :focus-visible {
+  outline-color: var(--plate);
+}
+
+.cv-skip {
+  position: absolute;
+  left: 16px;
+  top: -72px;
+  z-index: 60;
+  background: var(--plate-2);
+  border: 1px solid var(--document);
+  border-radius: 2px;
+  padding: 10px 16px;
+  transition: top 120ms ease-out;
+}
+
+.cv-skip:focus {
+  top: 16px;
+}
+
+/* --------------------------------------------------------------------------
+   The seal. Three arcs, one per proof, engraving clockwise at 300ms each in the
+   order the ceremony happens. An arc that has not landed is not drawn at all,
+   because a partially formed seal has to read as partially formed rather than as
+   merely in progress.
+
+   The gold inner rule appears once in the whole product: the instant all three
+   arcs close. Nothing else anywhere is gold.
+   -------------------------------------------------------------------------- */
+
+.cv-arc-engraved {
+  stroke-dasharray: var(--arc-length, 1);
+  stroke-dashoffset: var(--arc-length, 1);
+  animation: cv-engrave 300ms linear forwards;
+  animation-delay: calc(var(--arc-order, 0) * 300ms);
+}
+
+@keyframes cv-engrave {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.cv-seal-closed {
+  animation: cv-strike 420ms ease-out forwards;
+  animation-delay: 900ms;
+}
+
+@keyframes cv-strike {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Stage bars. Six of them, always all six, so a write shows how far it got
+   rather than only where it stopped. Engraved rules rather than a progress bar:
+   a bar that has not been reached is still drawn, at guilloche strength, because
+   the ceremony has a fixed length whether or not this transaction finished it.
+
+   The retry hatching is the important one. UNDETERMINED and the two timeouts are
+   consensus failing to conclude, not concluding against the caller, so they are
+   drawn as an unfinished engraving and never as a struck-through one.
+   -------------------------------------------------------------------------- */
+
+.cv-stage-bar {
+  height: 3px;
+  border-radius: 1px;
+  background: color-mix(in srgb, var(--guilloche) 24%, var(--plate));
+}
+
+.cv-stage-done .cv-stage-bar {
+  background: var(--rule-strong);
+}
+
+.cv-stage-now .cv-stage-bar {
+  background: var(--document);
+}
+
+.cv-stage-retry .cv-stage-bar {
+  background: repeating-linear-gradient(
+    115deg,
+    color-mix(in srgb, var(--guilloche) 62%, transparent) 0 2px,
+    transparent 2px 6px
+  );
+}
+
+/* A tag is lettering in a ruled box. The four tags differ by their words; the
+   rule strength is a second cue and never the only one. */
+.cv-tag {
+  font-family: var(--font-record);
+  font-size: 11px;
+  line-height: 16px;
+  letter-spacing: 0.06em;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: 1px 6px;
+  white-space: nowrap;
+}
+
+.cv-tag-verdict {
+  border-color: var(--rule-strong);
+  color: var(--document);
+}
+
+/* --------------------------------------------------------------------------
+   The active consensus stage breathes. It never spins, and it is never the only
+   thing on the row: the source being fetched is always named beside it.
+   -------------------------------------------------------------------------- */
+
+.cv-stage-active {
+  animation: cv-breathe 2600ms ease-in-out infinite;
+}
+
+@keyframes cv-breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Reduced motion. Every signature element is a structure rather than an
+   animation, so with motion off the seal is simply drawn in its current state:
+   arcs that landed are solid, arcs that did not are absent, and the gold rule is
+   present or it is not.
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .cv-arc-engraved,
+  .cv-seal-closed,
+  .cv-lockrule,
+  .cv-stage-active {
+    animation: none !important;
+    stroke-dashoffset: 0 !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .cv-skip {
+    transition: none;
+  }
+
+  * {
+    scroll-behavior: auto !important;
+  }
+}
+
+::selection {
+  background: color-mix(in srgb, var(--guilloche) 42%, transparent);
+  color: var(--document);
+}

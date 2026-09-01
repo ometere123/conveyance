@@ -1,0 +1,65 @@
+{
+  "network": "studionet",
+  "contract": "0x104767ad5d51b5004953e4fB9d5B548501aa9bd9",
+  "deploymentTransaction": "0x27ae8b590ece7c91280d21b28ca9817598b2d3e297453f113e17cdcaa0a9ac6d",
+  "deploymentSubmittedAt": "2026-08-31T02:18:53.679892+00:00",
+  "deploymentSubmittedAtNote": "The timestamp StudioNet records against the deployment transaction itself, which is the only deployment time this repository can prove.",
+  "gitCommitCarryingDeployedSource": null,
+  "gitCommitNote": "Null on purpose, not omitted. This tree is not under version control, so there is no commit id to name and none is invented. Recourse could name one and did; here the binding between the deployed contract and the file on disk is the digest and the byte comparison described in bindingNote. A commit says which bytes were intended. A digest says which bytes are actually running, which is the claim this file needs to make.",
+  "contractFile": "contracts/Conveyance.py",
+  "contractSha256": "7bc4452dc063afdd1a3a85f2e465b2ef263d236a5f1a92352e3af2d4ec3b501d",
+  "contractBytes": 130892,
+  "deployedSourceVerified": true,
+  "bindingNote": "Deployed source was retrieved from StudioNet with `npx genlayer@0.39.2 code 0x104767ad5d51b5004953e4fB9d5B548501aa9bd9` on 2026-08-31 and compared against contracts/Conveyance.py. The capture is 131198 bytes because the CLI frames the payload with a 263-byte prefix ending in \"\\n\\nResult:\\n\" and a 43-byte suffix of \"\\n\\n\\u2714 Contract code retrieved successfully\\n\", the tick being three bytes of UTF-8. Those 306 framing bytes are asserted rather than stripped and rounded off: 263 + 130892 + 43 = 131198 exactly, so no byte of the capture is unaccounted for and a real difference in the source could not hide inside the framing. Taking the body as `tail -c +264 | head -c 130892` and nothing else, cmp reports no difference at any byte offset and SHA-256 equals contractSha256 above. `npm run verify:deployment` checks contractSha256 against the file on disk, which catches repository drift; `npm run verify:schema` checks the deployed method set; on-chain parity is recorded here.",
+  "runtimePin": {
+    "firstLine": "# { \"Depends\": \"py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6\" }",
+    "note": "Without this line a deploy reports ACCEPTED, then FINALIZED, and returns a contract address with nothing registered at it. It fails like a success. One earlier attempt was lost that way and is recorded under failedDeployment."
+  },
+  "storedStateNote": "This deployment is deliberately not swept clean. Two demonstration deals are left OFFERED with 0.25 GEN and 0.05 GEN escrowed against example.com and example.net, so a reviewer opening the frontend against this address sees live state rather than an empty list. ledger() reports balance equal to held at 300000000000000000 wei, with nothing stranded.",
+  "verifiedBy": [
+    "npm run verify:deployment",
+    "npm run verify:schema",
+    "npm run verify:studionet"
+  ],
+  "evidence": "evidence/studionet.json",
+  "historicalDeployments": [
+    {
+      "contract": "0xC162BA113137539fD734e986403C1FA5fAbA6109",
+      "deploymentTransaction": "0x2ca51716f36f14be5a21d0e07d2e4497f7189fb943ab2b130ad619215cfecd5e",
+      "gitCommitCarryingDeployedSource": null,
+      "deployedSourceVerified": true,
+      "supersededOn": "2026-08-31",
+      "supersededBecause": "The seller's control-proof token was built from `Address.as_hex`, which returns the EIP-55 checksummed form, while the interface displayed the same token lowercased. The token is compared to a fetched DNS TXT value byte for byte, so every deal this contract opened named a seller who could not arm it. The symptom would not have been a refusal: an absent proof is tagged [TRANSIENT], so the interface would have told the seller to wait for a propagation that was never going to help. `_proof_token` now derives `who.as_hex.lower()`, which changes the contract source and so required a new deployment.",
+      "provenLive": "This address stored `seller=0xac3AC69dC0Bde389256dD6748C75817ead9286D9` where the current one stores `seller=0xac3ac69dc0bde389256dd6748c75817ead9286d9`, from a caller that passed the address in lower case both times.",
+      "valueStranded": "NO. Its final ledger() reported balance equal to held at 300000000000000000 wei across 2 deals opened.",
+      "evidenceNote": "The live transactions recorded against this address prove the behaviour of this superseded contract only. They are kept because they are true. Its two deals carry the same ids as the current deployment's two deals and they are not the same deals; they live at a different address. Its arity-crash transaction 0xdb412812c8c9210d508ce15ab5410435eec39d08a9e2dd60d21f4f93c493bf0f has a payload byte-identical to the current deployment's, which is why scripts/exercise-studionet.mjs asserts the recipient of every hash it is given."
+    },
+    {
+      "contract": "0x07a615f2F2D7fC48AF2630b410e403a82B1d261b",
+      "deploymentTransaction": "0x9630eb9a30066d391608f88fc2fbc954e61f6701eb41ea2d20725a1a400ab953",
+      "gitCommitCarryingDeployedSource": null,
+      "deployedSourceVerified": true,
+      "supersededOn": "2026-08-31",
+      "supersededBecause": "open_deal refused invalid input by raising, after gl.message.value had already arrived. StudioNet rolls storage back when GenVM reverts but does not return the value, so a caller who was turned down lost their escrow into the contract. This address holds 0.05 GEN stranded that way, from transaction 0xde1d4a9845eb69e24cd160139d41cc5a6dc704e1fc2dd709963eb7fa88b97698: its final ledger() reported a balance of 350000000000000000 wei against 300000000000000000 wei still escrowed against deals. open_deal now refunds through a receipt message and returns its tagged reason instead of raising, which changes the contract source and so required a new deployment.",
+      "provenLive": "The fix is proven on the current deployment by transaction 0xadec94d871007024683de4f5592a463b4f416b277ecfb299e8a522fc98fde1f0, a funded refusal that carries a receipt message returning 50000000000000000 wei to the caller.",
+      "valueStranded": "0.05 GEN, and not recoverable. The contract has no sweep or admin-withdraw path, which is deliberate: an owner who can move escrowed funds is a worse problem than 0.05 GEN of simulated network value stranded on a superseded address. Recorded here rather than written off silently.",
+      "evidenceNote": "Its other live transactions are 0x25c85a43dd7567e668625c56a3b5f04d2168aea74a0b7e76c68cb7d86ea3bcd7, 0xc87f85e81359852242715d370ea99655ee9f43606e9f02bb7740093add2cb6dd, 0xac04d2ab057be5a21c1dbd611e851148e874b50d72a47da813ae7b739bf37105 and 0x0613cc9deed0eaac17460d6217d7fd3f9d7437801e8faea6213dd25aeec65c06. They prove the behaviour of this superseded contract only."
+    },
+    {
+      "contract": "0xB869533BEE20269514c7552dc85215e10d8b7A75",
+      "deploymentTransaction": "0xbdeeabdc6aa33dbe762e766ec4bbe4498d075b38af108ffb9f5639d49d616d4d",
+      "gitCommitCarryingDeployedSource": null,
+      "supersededOn": "2026-08-31",
+      "supersededBecause": "A defect in the per-domain deal index.",
+      "evidenceNote": "Superseded early, before the exercise captures kept under _build/conveyance-evidence/ were taken, so it has no live behaviour recorded beyond its deployment. It is listed because omitting a deployment that existed would make the count of deployments wrong."
+    }
+  ],
+  "failedDeployment": {
+    "contract": "0x513B913dfbCB1790a35630f100CB59140a67B4ba",
+    "deploymentTransaction": "0x3bd1eee78027cf2b69e4be64334d21c23be5745ec7f79346b84c43a70d6524bb",
+    "listedSeparatelyBecause": "Calling this superseded would imply it ever ran.",
+    "whatHappened": "The deploy reported ACCEPTED, then FINALIZED, and returned this address. Nothing was registered at it and no method could be called.",
+    "cause": "The source was missing the GenVM runtime pin, the `# { \"Depends\": \"py-genlayer:...\" }` first line.",
+    "whyItIsRecorded": "Because it failed like a success, which is the most expensive kind of failure to diagnose twice."
+  }
+}
