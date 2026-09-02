@@ -22,3 +22,6 @@ __pycache__/
 # playwright's failure artefacts: screenshots, traces and the HTML report
 test-results/
 playwright-report/
+
+.vercel
+.env*
