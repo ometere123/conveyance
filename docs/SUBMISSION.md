@@ -11,6 +11,8 @@ title, private registrar custody or beneficial ownership.
 
 ## Canonical deployment
 
+Live app: https://conveyance-6h83scdfq-delealufejoel-4184s-projects.vercel.app
+
 Canonical StudioNet deployment: `0x7C2f0B5F397957214b7D15120dCb9A5cDbd282d1`, transaction
 `0xfe5547f665b6750cf91b31b917779f9af3ed5876a34c24c8b56eb70e4f2b29b6`, finalized with GenVM
 SUCCESS and raw source parity against commit `3eb6d8e7ddc0bee424ed63323a338829026e77b8`. The
