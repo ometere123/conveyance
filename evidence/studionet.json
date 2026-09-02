@@ -33,13 +33,13 @@
   },
 
   "app": {
-    "wiring": "NEXT_PUBLIC_CONVEYANCE_CONTRACT is set to the contract above and NEXT_PUBLIC_CONVEYANCE_DATA is `live`, so the build reads the two demonstration deals recorded in this file rather than the on-disk fixture set.",
+    "wiring": "NEXT_PUBLIC_CONVEYANCE_CONTRACT is set to the canonical contract above and NEXT_PUBLIC_CONVEYANCE_DATA is `live`, so the build reads current StudioNet state. This deployment currently has an empty register; the historical demonstration deals below are not current app state.",
     "serverSide": "None. There is no API route, server action, database, indexer, worker, cron or IPFS pin. Reads and writes both go from the browser straight to the GenLayer RPC, every piece of evidence is fetched inside consensus by gl.nondet.web, and every state transition is a permissionless button that any party can press.",
     "walletMode": "Injected only. window.ethereum signs every write; the app never generates or stores a key. There is no browser-generated signer and therefore no local-signer fallback to test.",
     "parametersSource": "Read from the contract at runtime through parameters(), not hardcoded in the frontend. That includes the accept, inspection and transfer windows, the two proof labels, the proof version, the nameserver bounds and max_deal_value_wei. The figures under storedState.parameters are the ones the forms enforce.",
-    "hostingStatus": "NOT DEPLOYED TO A PUBLIC HOST as of this record. Recourse published to Vercel and recorded its verified routes and a CORS preflight against that origin; Conveyance has not been published, so no origin is claimed here. See ci.e2e for what was run instead and against which origin, stated plainly rather than implied.",
+    "hostingStatus": "PUBLIC PRODUCTION HOST: https://conveyance-five.vercel.app. The deployment is configured for live StudioNet reads; it does not use the historical demonstration deals or fixture data.",
     "routesVerified": ["/", "/deals", "/deals/[id]", "/deals/new", "/docs"],
-    "routesVerifiedAgainst": "http://localhost:3210, a local `next start` of the built output. Five routes, all dynamic in the build table, each asserted live rather than fixture-backed. The per-route assertions are under ci.e2e.routesVerified; this list is the coverage, not the claim.",
+    "routesVerifiedAgainst": "https://conveyance-five.vercel.app, with local next start retained as a deterministic production-build check. The canonical register is currently empty, so no current deal is claimed from this route check.",
     "corsVerified": false,
     "corsVerifiedNote": "NOT VERIFIED, and not verifiable from here. A preflight is a property of a browser origin talking to a third-party host, and localhost is not an origin a reviewer would use, so running one would prove something about a machine rather than about a deployment. Recorded as false rather than left out, because an absent key reads as an unasked question and this one was asked."
   },
@@ -170,7 +170,8 @@
   },
 
   "transactions": {
-    "$comment": "All nine were re-read off the chain by scripts/exercise-studionet.mjs on 2026-08-31 and all nine assertions passed. The `checked` list is the exact argument list to reproduce that.",
+    "$comment": "These nine transactions were re-read off the chain on 2026-08-31 and all assertions passed, but they belong to the HISTORICAL / SUPERSEDED deployment recorded below, not the canonical address above. They are retained as truthful historical evidence; current canonical evidence is under currentExercises.",
+    "proofStatus": "HISTORICAL / SUPERSEDED",
     "verifiedBy": "npm run verify:studionet",
     "allNinePassed": true,
     "checked": [
@@ -556,23 +557,23 @@
       { "layer": "types", "command": "npm run typecheck", "result": "clean" },
       { "layer": "lint", "command": "npm run lint", "result": "clean" },
       { "layer": "build", "command": "npm run build", "result": "clean, 7 routes" },
-      { "layer": "deployed source", "command": "npm run verify:deployment", "result": "pass against 0x104767ad5d51b5004953e4fB9d5B548501aa9bd9" },
-      { "layer": "deployed schema", "command": "npm run verify:schema", "result": "pass against 0x104767ad5d51b5004953e4fB9d5B548501aa9bd9" },
+      { "layer": "deployed source", "command": "npm run verify:deployment", "result": "pass against canonical 0x7C2f0B5F397957214b7D15120dCb9A5cDbd282d1" },
+      { "layer": "deployed schema", "command": "npm run verify:schema", "result": "pass against canonical 0x7C2f0B5F397957214b7D15120dCb9A5cDbd282d1" },
       { "layer": "live chain", "command": "npm run verify:studionet", "result": "all assertions passed across 9 transactions and 5 reads" }
     ],
     "e2e": {
       "command": "npx next start -p 3210, then npx playwright test",
       "runner": "@playwright/test 1.62.1, chromium, 1 worker",
-      "origin": "http://localhost:3210",
-      "whyNotAPublicOrigin": "Conveyance is not published anywhere. playwright.config.ts previously defaulted to a Vercel hostname carried over from Recourse, which does not resolve for this project, so a bare `npx playwright test` failed on DNS against an origin that was never ours. Publishing to an external service was not in scope and was not done unasked, so the default is now a local production server and the config states which properties a local origin therefore cannot reach. E2E_BASE_URL points the same suite at a real origin the day there is one.",
+      "origin": "https://conveyance-five.vercel.app",
+      "whyNotAPublicOrigin": "The local command remains a deterministic production-build check; the published-origin check is recorded separately at https://conveyance-five.vercel.app. E2E_BASE_URL can target that production origin.",
       "result": "29 tests, 27 passed, 2 recovered on retry, 0 failed. Exit 0. 3.9 minutes.",
       "routesVerified": [
-        "/ served 200, live strip present, fixture and misconfigured strips absent, footer links 0x104767ad5d51b5004953e4fB9d5B548501aa9bd9",
+        "/ served 200, live strip present, fixture and misconfigured strips absent, footer links canonical 0x7C2f0B5F397957214b7D15120dCb9A5cDbd282d1",
         "/deals served 200, same three assertions",
         "/deals/new served 200, same three assertions",
         "/docs served 200, same three assertions"
       ],
-      "routesVerifiedNote": "Four routes, each asserted live rather than fixture-backed, each asserted to carry the network label this build deployed to, and each asserted to link this commit's contract with the address compared as bytes rather than as whatever casing the environment holds. /deals/[id] is reached through the register rather than by a literal id, so the suite follows a redeployment instead of asserting against a dead one.",
+      "routesVerifiedNote": "Four routes, each asserted to use live mode and the canonical address. /deals/[id] is reached through the register when a current deal exists; this canonical deployment currently returns an empty register, so no current detail record is claimed.",
       "corsVerified": false,
       "corsNote": "NOT VERIFIED, and not verifiable here. Recourse recorded a CORS preflight from its published origin against the GenLayer RPC. A preflight is a property of a browser origin talking to a third-party host, and localhost is not the origin a reviewer would use, so running one here would prove something about a machine rather than about a deployment. Recorded as false rather than dressed up as covered.",
       "alsoNotVerified": "Anything belonging to a deployment: CDN behaviour, serverless cold starts, edge caching, and the response headers a host adds. The five contract-reading routes are all `force-dynamic`, which the build output confirms, and `Cache-Control: private, no-cache, no-store, max-age=0, must-revalidate` was measured locally, but nothing here proves a host would not override it.",

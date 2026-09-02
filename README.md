@@ -310,15 +310,14 @@ checks assert.
 
 ```bash
 npm run verify:studionet    # the nine asserted transactions, re-read off the chain
-npm run verify:deployment   # fails closed until a current canonical address is configured
-npm run verify:schema       # verifies the configured canonical method table
+npm run verify:deployment   # byte-for-byte checks the canonical StudioNet source
+npm run verify:schema       # verifies the canonical method table
 ```
 
-The current Git source is not canonically deployed yet. `verify:deployment` and
-`verify:schema` require an explicit current deployment configuration and fail closed when it
-is absent. The byte-for-byte retrieval details and digest below belong to the historical,
-superseded address only; they are retained so the old claim remains auditable and cannot be
-mistaken for proof of this source.
+The current Git source is canonically deployed at `0x7C2f0B5F397957214b7D15120dCb9A5cDbd282d1`.
+It is finalized, GenVM-successful, schema-verified and source-parity verified. Its register is
+currently empty, so historical demonstration deals are not current app state. The old address
+and its transactions remain explicitly **HISTORICAL / SUPERSEDED** for auditability.
 
 ### End to end against a served build
 
@@ -331,11 +330,10 @@ The Playwright suite contains 29 tests against a served production build. It is 
 production-build check unless `E2E_BASE_URL` is explicitly supplied; it is not evidence of a
 published origin or a current StudioNet deployment.
 
-There is no published origin, so the base URL defaults to `http://localhost:3210` and
-`E2E_BASE_URL` points the same suite elsewhere the day there is one. One property is
-therefore **not verified and is recorded as not verified**: a CORS preflight from a
-published origin against the GenLayer RPC. A preflight is a property of a browser origin
-talking to a third-party host, and localhost is not the origin a reviewer would use.
+The published origin is https://conveyance-five.vercel.app; `E2E_BASE_URL` can point the same
+suite at it. The local default remains useful for deterministic production-build checks. CORS
+and host-specific headers are environment properties and are recorded separately from contract
+proof.
 
 The two recoveries were StudioNet's read budget, which is thirty requests a minute and says
 so by name in its own error. Every route is `force-dynamic`, so a serialized pass spends far
@@ -460,7 +458,7 @@ invented.
 Recorded in full under `notProvenOnChain` in
 [evidence/studionet.json](evidence/studionet.json), summarised here:
 
-- **The successful half of the lifecycle is not proven on chain.** `arm`, a passing
+- **The successful half of the lifecycle is not proven on the canonical chain.** `arm`, a passing
   `check_transfer`, a `settle` that releases and a `refund` that returns are each exercised
   only in the direct suite. The two demonstration deals are lodged against `example.com` and
   `example.net`, which are IANA reserved, so nobody can publish a TXT record under them or
@@ -478,7 +476,8 @@ Recorded in full under `notProvenOnChain` in
   domain to demonstrate the cleartext refusal.
 - **`[EXTERNAL]` and `[LLM_ERROR]` have no live transaction.** `[EXTERNAL]` has been observed
   in the interface, under the rate limit described above, but not as a stored check outcome.
-- **No CORS preflight from a published origin,** because there is no published origin.
+- **No canonical funded open/refund exercise is recorded yet.** The current deployment's
+  register and balance are empty; funded exercises from the old address remain historical.
 
 One further item, recorded rather than corrected. The deployed contract's docstring says the
 spliced evidence path is unit-tested with `39 tests`, three times, at lines 57, 59 and 76.
@@ -510,8 +509,8 @@ DEPLOYMENT.json             addresses, digests, and every superseded deployment
 
 ## Submission notes
 
-- The historical deployment is not the current source. Editing the contract requires a fresh
-  deployment and fresh parity/evidence before any address can be called canonical.
+- The historical deployment is not the current source. The canonical address above carries the
+  current source and fresh parity evidence.
 - The historical demonstration deals belong to the superseded deployment and are not claimed as
   current state.
 - `evidence/studionet.json` records the measurements that failed and the ones that nearly
