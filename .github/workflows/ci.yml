@@ -49,3 +49,9 @@ jobs:
       - run: genvm-lint check contracts/Conveyance.py --json
       - run: npm run build
       - run: python scripts/verify_fixtures.py
+      # Check-only (no --write): proves the embedded RDAP/DNS module in the contract is
+      # byte-identical to its independently unit-tested standalone source (_build/conveyance-rdap/
+      # rdap.py), without re-splicing or touching contracts/Conveyance.py. Previously local-only,
+      # because scripts/splice_rdap.py resolved its source one directory above this repo; it now
+      # resolves from inside this repo, so this is the same command a developer runs locally.
+      - run: python scripts/splice_rdap.py

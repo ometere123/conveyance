@@ -69,10 +69,17 @@ import unittest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 PROJECT = os.path.dirname(HERE)
+# The workspace this was developed in also carries a sibling copy of rdap.py one level above
+# PROJECT, in a multi-project scratch `_build/`. That copy is not part of this Git repository and
+# does not exist in a normal clone or in CI, which only ever checks out `conveyance/` itself. The
+# authoritative copy for this script is the one actually committed inside this repository, at
+# PROJECT/_build/conveyance-rdap/rdap.py (verified byte-identical to the workspace scratch copy
+# at the time this was fixed) — so SOURCE and SUITE_DIR resolve from PROJECT, not from REPO.
+# REPO is kept only for the human-readable relpath() labels printed below.
 REPO = os.path.dirname(PROJECT)
 
-SOURCE = os.path.join(REPO, "_build", "conveyance-rdap", "rdap.py")
-SUITE_DIR = os.path.join(REPO, "_build", "conveyance-rdap")
+SOURCE = os.path.join(PROJECT, "_build", "conveyance-rdap", "rdap.py")
+SUITE_DIR = os.path.join(PROJECT, "_build", "conveyance-rdap")
 CONTRACT = os.path.join(PROJECT, "contracts", "Conveyance.py")
 
 BEGIN = "# --- CONVEYANCE-RDAP SPLICE BEGIN ---"
