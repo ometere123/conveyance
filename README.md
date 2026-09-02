@@ -16,7 +16,7 @@ The contract states its own boundary, in its header and in `parameters()`:
 > registrar account has no retained delegates.
 
 - Network: StudioNet
-- Live app: https://conveyance-6h83scdfq-delealufejoel-4184s-projects.vercel.app
+- Live app: https://conveyance-five.vercel.app
 - Canonical StudioNet deployment: `0x7C2f0B5F397957214b7D15120dCb9A5cDbd282d1`
 - Historical / superseded deployment: `0x104767ad5d51b5004953e4fB9d5B548501aa9bd9`
 - Historical deployment transaction: `0x27ae8b590ece7c91280d21b28ca9817598b2d3e297453f113e17cdcaa0a9ac6d`
