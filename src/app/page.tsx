@@ -18,15 +18,39 @@ export default async function HomePage() {
 
   return (
     <div className="space-y-14">
-      <section className="max-w-4xl">
-        <p className="cv-legend">deed of conveyance · domain escrow</p>
-        <h1 className="cv-asset mt-3 max-w-[22ch]">Domain escrow that settles when public registry and DNS evidence prove delivery.</h1>
-        <p className="cv-body mt-5 max-w-[60ch]">Conveyance holds the buyer&apos;s money while the seller transfers a domain. Anyone can trigger the contract&apos;s public evidence checks; the deterministic escrow then releases or refunds the funds.</p>
-        <div className="mt-7 flex flex-wrap items-center gap-5">
-          <Link href="/deals/new" className="cv-btn no-underline">Lodge an offer</Link>
-          <Link href="/deals" className="cv-legend cv-legend-ink underline underline-offset-4">View register</Link>
-          <Link href="/docs" className="cv-legend underline underline-offset-4">How verification works</Link>
+      <section className="cv-hero">
+        <div className="cv-hero-main">
+          <p className="cv-legend">deed of conveyance · domain escrow</p>
+          <h1 className="cv-asset mt-3 max-w-[22ch]">Domain escrow that settles when public registry and DNS evidence prove delivery.</h1>
+          <p className="cv-body mt-5 max-w-[60ch]">Conveyance holds the buyer&apos;s money while the seller transfers a domain. Anyone can trigger the contract&apos;s public evidence checks; the deterministic escrow then releases or refunds the funds.</p>
+          <div className="mt-7 flex flex-wrap items-center gap-5">
+            <Link href="/deals/new" className="cv-btn no-underline">Lodge an offer</Link>
+            <Link href="/deals" className="cv-legend cv-legend-ink underline underline-offset-4">View register</Link>
+            <Link href="/docs" className="cv-legend underline underline-offset-4">How verification works</Link>
+          </div>
         </div>
+        <svg viewBox="0 0 160 160" className="cv-hero-mark" aria-hidden="true" role="presentation">
+          <circle cx="80" cy="80" r="58" fill="none" className="cv-hero-rim" />
+          {[0, 1, 2].map((segment) => {
+            const start = -90 + segment * 120 + 6;
+            const end = start + 108;
+            const toXY = (deg: number) => {
+              const rad = (deg * Math.PI) / 180;
+              return [80 + Math.cos(rad) * 42, 80 + Math.sin(rad) * 42] as const;
+            };
+            const [x1, y1] = toXY(start);
+            const [x2, y2] = toXY(end);
+            return (
+              <path
+                key={segment}
+                d={`M ${x1} ${y1} A 42 42 0 0 1 ${x2} ${y2}`}
+                fill="none"
+                className="cv-hero-arc"
+              />
+            );
+          })}
+          <circle cx="80" cy="80" r="20" fill="none" className="cv-hero-rim" />
+        </svg>
       </section>
 
       <section className="cv-panel p-6">
