@@ -100,8 +100,12 @@ body {
 .cv-asset {
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: 48px;
-  line-height: 1.08;
+  /* Fluid between a 320px phone and the 900px plate breakpoint, so the
+     opening clause never wraps to the seven- or eight-line stack a fixed
+     48px produces under ~400px -- measured 414px of headline alone at
+     375px before this was fluid. */
+  font-size: clamp(30px, 7vw + 12px, 48px);
+  line-height: 1.1;
   letter-spacing: -0.01em;
 }
 

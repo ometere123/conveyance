@@ -39,7 +39,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-dvh">
-      <header className="cv-plate sticky top-0 z-40 border-b border-[var(--rule)] backdrop-blur-[2px]">
+      {/* Sticky only from the plate breakpoint up. Below it the header's stacked rows (logo,
+          wallet control, wrapped nav, provenance strip) run tall enough to pin away most of a
+          phone screen while scrolling; a normal-flow header still shows the same information on
+          load and stays reachable by scrolling back up. */}
+      <header className="cv-plate plate:sticky plate:top-0 z-40 border-b border-[var(--rule)] backdrop-blur-[2px]">
         <div className="cv-guilloche-band" />
         <div className="mx-auto flex max-w-[1400px] flex-wrap items-baseline gap-x-6 gap-y-2 px-4 py-3 plate:px-8">
           <Link href="/" className="cv-heading shrink-0 no-underline">

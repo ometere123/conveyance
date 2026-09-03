@@ -58,9 +58,9 @@ export default async function HomePage() {
         <p className="cv-aside mt-2">Canonical contract <span className="cv-record-sm">0x7C2f…82d1</span></p>
         {ledger.kind === "AVAILABLE" ? <div className="mt-5 grid gap-5 sm:grid-cols-4">
           <div><p className="cv-legend">open deals</p><p className="cv-heading mt-1">{formatCount(ledger.value.deals_opened)}</p></div>
-          <div><p className="cv-legend">escrow held</p><p className="cv-heading mt-1">{formatGen(ledger.value.held)} GEN</p></div>
+          <div><p className="cv-legend">escrow held</p><p className="cv-heading mt-1">{formatGen(ledger.value.held)}</p></div>
           <div><p className="cv-legend">deliveries verified</p><p className="cv-heading mt-1">{formatCount(ledger.value.deliveries_verified)}</p></div>
-          <div><p className="cv-legend">contract balance</p><p className="cv-heading mt-1">{formatGen(ledger.value.balance)} GEN</p></div>
+          <div><p className="cv-legend">contract balance</p><p className="cv-heading mt-1">{formatGen(ledger.value.balance)}</p></div>
         </div> : <ReadUnavailable result={ledger} subject="live escrow status" />}
       </section>
 
