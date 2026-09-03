@@ -12,9 +12,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
 import { Logo } from "@/components/logo";
-import { TransactionRail } from "@/components/transaction-rail";
 import { WalletControl } from "@/components/wallet-control";
 import { dataProvenance } from "@/lib/data-source";
 import { shortenHex } from "@/lib/format";
@@ -37,7 +35,6 @@ const NAV = [
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const [railOpen, setRailOpen] = useState(false);
   const provenance = dataProvenance();
 
   return (
@@ -49,7 +46,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Logo />
             <span className="ml-2">Conveyance</span>
           </Link>
-          <nav className="order-3 flex w-full flex-wrap items-baseline gap-x-5 gap-y-1 plate:order-none plate:w-auto plate:flex-1">
+          <nav className="order-3 flex w-full flex-wrap items-baseline justify-center gap-x-5 gap-y-1 plate:order-none plate:w-auto plate:flex-1 plate:justify-center">
             {NAV.map((item) => {
               const active =
                 item.href === "/"
@@ -72,15 +69,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             })}
           </nav>
           <div className="ml-auto flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setRailOpen((open) => !open)}
-              aria-expanded={railOpen}
-              aria-controls="tx-rail"
-              className="cv-btn-quiet"
-            >
-              {railOpen ? "Close writes" : "Writes"}
-            </button>
             <WalletControl />
           </div>
         </div>
@@ -103,12 +91,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </p>
         </div>
       </header>
-
-      {railOpen ? (
-        <div id="tx-rail" className="mx-auto max-w-[1400px] px-4 pt-6 plate:px-8">
-          <TransactionRail onClose={() => setRailOpen(false)} />
-        </div>
-      ) : null}
 
       <main id="main" className="mx-auto max-w-[1400px] px-4 py-10 plate:px-8">
         {children}
