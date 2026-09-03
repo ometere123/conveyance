@@ -46,7 +46,18 @@
  *   node scripts/exercise-studionet.mjs open1=0x… open2=0x… zeroControl=0x… fundedRefusal=0x… \
  *     arm=0x… settle=0x… refund=0x… checkTransfer=0x… arityError=0x…
  *
- * Any subset may be passed; only the labels given are checked. Reads always run.
+ * Any subset may be passed; only the labels given are checked. Every hash given here is
+ * HISTORICAL evidence: EXPECTATIONS describes the two demo deals and the eight refusals/checks
+ * captured against a superseded deployment (see DEPLOYMENT.json's historicalDeployments and
+ * evidence/studionet.json), and the recipient guard below fails if a given hash was not sent to
+ * the contract this script is currently pointed at -- so passing a historical hash against the
+ * current canonical address is expected to fail loudly, not read as proof about the canonical
+ * contract. `npm run verify:studionet` passes none, by design: on a clean checkout there is no
+ * current, non-stale hash to check.
+ *
+ * Reads always run, and check the CURRENT CANONICAL deployment's actual state: on a fresh
+ * deployment that is empty (no deal, no escrow), not the two-deal state the historical
+ * deployment reached. See CURRENT CANONICAL READS below.
  */
 
 import { createAccount, createClient } from "genlayer-js";
@@ -65,13 +76,17 @@ if (existsSync(".env.local")) {
 const RPC_GAP_MS = 4_500; // At most 13 requests/minute, below the submission limit.
 const POLL_MS = 5_000;
 
+// HISTORICAL constants: the two demo deals and the funded-refusal value only ever existed on
+// the superseded deployment (0x104767ad5d51b5004953e4fB9d5B548501aa9bd9 at the time this was
+// captured; see DEPLOYMENT.json). They are used below only by the hash-driven EXPECTATIONS
+// checks (which run only when a hash is passed) and by the historical-deal lookup at the end of
+// CURRENT CANONICAL READS, which asserts these ids are absent from the current deployment.
 const DEAL_ONE = "cv-demo-example-com-1";
 const DEAL_TWO = "cv-demo-example-net-1";
 const SELLER = "0xac3ac69dc0bde389256dd6748c75817ead9286d9";
 const ESCROW_ONE = "250000000000000000";
 const ESCROW_TWO = "50000000000000000";
 const REFUSAL_VALUE = "50000000000000000";
-const HELD_TOTAL = "300000000000000000";
 
 /**
  * What each labelled hash has to turn out to have been.
@@ -327,7 +342,16 @@ for (const [label, hash] of pairs) {
 }
 
 /* -------------------------------------------------------------------------- */
-/* The read-backs                                                             */
+/* CURRENT CANONICAL READS                                                    */
+/*                                                                            */
+/* Everything below reads the deployment at `address` (NEXT_PUBLIC_CONVEYANCE */
+/* _CONTRACT) as it stands right now, and asserts the state that deployment  */
+/* actually has: fresh and empty (DEPLOYMENT.json's own storedStateNote).    */
+/* It does not assume, and must never assume, the two-deal state a           */
+/* HISTORICAL/SUPERSEDED deployment once reached -- that state is a fact     */
+/* about that other contract, checked separately, only when its own          */
+/* transaction hashes are passed on the command line (see EXPECTATIONS       */
+/* above and DEAL_ONE/DEAL_TWO's own historical-constants comment).          */
 /* -------------------------------------------------------------------------- */
 
 const read = (functionName, args = []) =>
@@ -346,42 +370,35 @@ if (String(parameters.embedded_function_count) !== "40") {
   fail(`parameters().embedded_function_count is ${parameters.embedded_function_count}, expected 40 to match the spliced region`);
 }
 
-// Safe here and nowhere earlier: every hash above has been polled to FINALIZED, so any refund
-// dispatched by a receipt message has landed.
+// Safe here and nowhere earlier: every hash checked above (if any) has been polled to
+// FINALIZED, so any refund dispatched by a receipt message has landed.
 if (String(ledger.balance) !== String(ledger.held)) {
   fail(`ledger() balance ${ledger.balance} against held ${ledger.held}. Either value is stranded or a refund is still in flight`);
 }
-if (String(ledger.held) !== HELD_TOTAL) fail(`ledger().held is ${ledger.held}, expected ${HELD_TOTAL}`);
-if (String(ledger.deals_opened) !== "2") fail(`ledger().deals_opened is ${ledger.deals_opened}, expected 2`);
-if (String(ledger.total_escrowed) !== HELD_TOTAL) fail(`ledger().total_escrowed is ${ledger.total_escrowed}, expected ${HELD_TOTAL}`);
-// A declined `open_deal` never became a deal, so returning its value is not a deal refund and must
-// not be counted as one. A non-zero figure here would mean a real refund path had run.
-if (String(ledger.total_refunded) !== "0") fail(`ledger().total_refunded is ${ledger.total_refunded}, expected 0`);
-if (String(ledger.total_released) !== "0") fail(`ledger().total_released is ${ledger.total_released}, expected 0`);
+// The current canonical deployment's own state: nothing has ever been escrowed against it.
+// A non-zero figure here would mean either a real deal or a stranding defect, neither of which
+// this deployment is known to have.
+if (String(ledger.held) !== "0") fail(`ledger().held is ${ledger.held}, expected 0 on a fresh canonical deployment`);
+if (String(ledger.balance) !== "0") fail(`ledger().balance is ${ledger.balance}, expected 0 on a fresh canonical deployment`);
+if (String(ledger.deals_opened) !== "0") fail(`ledger().deals_opened is ${ledger.deals_opened}, expected 0 on a fresh canonical deployment`);
+if (String(ledger.total_escrowed) !== "0") fail(`ledger().total_escrowed is ${ledger.total_escrowed}, expected 0 on a fresh canonical deployment`);
+if (String(ledger.total_refunded) !== "0") fail(`ledger().total_refunded is ${ledger.total_refunded}, expected 0 on a fresh canonical deployment`);
+if (String(ledger.total_released) !== "0") fail(`ledger().total_released is ${ledger.total_released}, expected 0 on a fresh canonical deployment`);
 
-if (!Array.isArray(deals) || deals.length !== 2) {
-  fail(`list_deals() returned ${Array.isArray(deals) ? deals.length : "a non-array"}, expected 2`);
-} else {
-  if (String(deals[0].deal_id) !== DEAL_ONE) fail(`list_deals()[0] is ${deals[0].deal_id}, expected ${DEAL_ONE} in open order`);
-  if (String(deals[1].deal_id) !== DEAL_TWO) fail(`list_deals()[1] is ${deals[1].deal_id}, expected ${DEAL_TWO} in open order`);
+if (!Array.isArray(deals) || deals.length !== 0) {
+  fail(`list_deals() returned ${Array.isArray(deals) ? deals.length : "a non-array"}, expected 0 on a fresh canonical deployment`);
 }
 
-for (const [id, deal, escrow, domain] of [
-  [DEAL_ONE, dealOne, ESCROW_ONE, "example.com"],
-  [DEAL_TWO, dealTwo, ESCROW_TWO, "example.net"],
+// The two historical demo deal ids must not exist on the canonical deployment either -- if they
+// did, that would mean the canonical contract is not actually fresh, or is somehow sharing state
+// with the historical one. get_deal() returns {} for an id it holds nothing under.
+for (const [id, deal] of [
+  [DEAL_ONE, dealOne],
+  [DEAL_TWO, dealTwo],
 ]) {
-  if (String(deal.deal_id) !== id) fail(`get_deal(${id}) came back as ${deal.deal_id}`);
-  if (String(deal.state) !== "OFFERED") fail(`${id} is ${deal.state}, expected OFFERED`);
-  if (String(deal.escrow) !== escrow) fail(`${id} escrow is ${deal.escrow}, expected ${escrow}`);
-  if (String(deal.domain) !== domain) fail(`${id} domain is ${deal.domain}, expected ${domain}`);
-  const token = String(deal.seller_proof_token);
-  if (token !== `v1;deal=${id};seller=${SELLER}`) {
-    fail(`${id} seller_proof_token is ${token}, and the interface would display v1;deal=${id};seller=${SELLER}`);
+  if (deal && typeof deal === "object" && Object.keys(deal).length > 0) {
+    fail(`get_deal(${id}) returned a stored deal (${JSON.stringify(deal).slice(0, 200)}) on the canonical deployment; that id is historical/superseded evidence and must not exist here`);
   }
-  checkCasing(`get_deal(${id})`, token);
-  // The address fields may report checksummed; only a compared value has to be lower case.
-  if (String(deal.buyer_proof_revealed) !== "False") fail(`${id} reports a revealed buyer token before any check ran`);
-  if (String(deal.checks) !== "0") fail(`${id} has ${deal.checks} checks, expected 0`);
 }
 
 /* -------------------------------------------------------------------------- */
