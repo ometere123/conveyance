@@ -295,6 +295,8 @@
   },
 
   "fundedRefusal": {
+    "proofStatus": "HISTORICAL / SUPERSEDED",
+    "proofStatusNote": "This transaction ran against 0x104767ad5d51b5004953e4fB9d5B548501aa9bd9 (see the deployment block above), which is itself historical/superseded, not the canonical 0x7C2f0B5F397957214b7D15120dCb9A5cDbd282d1 recorded at the top of this file. It proves the refund-through-a-receipt-message behavior existed on that contract. The current canonical deployment does not have a funded open_deal refusal/refund proven live; see currentExercises and currentDeployment.valueInvariant for what is proven on it.",
     "$comment": "The requirement that forced the second redeployment: a funded call the contract refuses must not keep the caller's value. StudioNet does not return gl.message.value when an execution reverts, so a payable method cannot refuse by raising.",
     "hash": "0xadec94d871007024683de4f5592a463b4f416b277ecfb299e8a522fc98fde1f0",
     "method": "open_deal",
@@ -321,6 +323,8 @@
   },
 
   "refundAtFinalization": {
+    "proofStatus": "HISTORICAL / SUPERSEDED",
+    "proofStatusNote": "Measured against 0x104767ad5d51b5004953e4fB9d5B548501aa9bd9, historical/superseded, not the canonical 0x7C2f0B5F397957214b7D15120dCb9A5cDbd282d1. The timing rule it documents (assert balance==held only after FINALIZED) is a general fact about StudioNet messaging, not a claim about current canonical state.",
     "$comment": "A measurement that nearly went into this file as a false negative, recorded in full because the trap is easy to fall into twice.",
     "what": "The refund message carries `onAcceptance: false`, which means the transfer is dispatched at FINALIZED and not at ACCEPTED.",
     "consequence": "A ledger() read taken seconds after a funded refusal shows balance exceeding held by exactly the refunded amount. That is the same shape as the value-stranding defect this contract was redeployed to fix, and it reads as though the fix did not work.",
@@ -351,6 +355,8 @@
   },
 
   "valueLedger": {
+    "proofStatus": "HISTORICAL / SUPERSEDED",
+    "proofStatusNote": "This reconciliation is over 0x104767ad5d51b5004953e4fB9d5B548501aa9bd9's transactions, historical/superseded, not the canonical 0x7C2f0B5F397957214b7D15120dCb9A5cDbd282d1. The current canonical deployment's own value invariant (currently balance 0, held 0, unexplained 0, since nothing has been escrowed against it yet) is under currentDeployment.valueInvariant.",
     "$comment": "The contract's own inventory, reconciled so that nothing in the balance is left as a loose end.",
     "transactions": [
       { "hash": "0x27ae8b590ece7c91280d21b28ca9817598b2d3e297453f113e17cdcaa0a9ac6d", "deltaWei": "0", "what": "deployment" },
