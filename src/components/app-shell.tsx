@@ -49,9 +49,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Logo />
             <span className="ml-2">Conveyance</span>
           </Link>
-          <p className="cv-legend hidden shrink-0 plate:block">
-            escrow for a domain that has to change hands
-          </p>
           <nav className="order-3 flex w-full flex-wrap items-baseline gap-x-5 gap-y-1 plate:order-none plate:w-auto plate:flex-1">
             {NAV.map((item) => {
               const active =
