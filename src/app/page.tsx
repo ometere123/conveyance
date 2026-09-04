@@ -2,7 +2,8 @@ import Link from "next/link";
 import { DealRow, DealRowHead } from "@/components/deal-row";
 import { ReadUnavailable } from "@/components/read-unavailable";
 import { getLedger, listDeals } from "@/lib/data-source";
-import { formatCount, formatGen } from "@/lib/format";
+import { formatCount, formatGen, shortenHex } from "@/lib/format";
+import { CONTRACT_ADDRESS } from "@/lib/genlayer/config";
 
 export const dynamic = "force-dynamic";
 
@@ -55,7 +56,7 @@ export default async function HomePage() {
 
       <section className="cv-panel p-6">
         <div className="flex flex-wrap items-baseline justify-between gap-3"><h2 className="cv-heading">Live status</h2><span className="cv-legend cv-legend-ink">StudioNet · LIVE</span></div>
-        <p className="cv-aside mt-2">Canonical contract <span className="cv-record-sm">0x7C2f…82d1</span></p>
+        <p className="cv-aside mt-2">Canonical contract <span className="cv-record-sm">{CONTRACT_ADDRESS ? shortenHex(CONTRACT_ADDRESS, 6, 4) : "not configured"}</span></p>
         {ledger.kind === "AVAILABLE" ? <div className="mt-5 grid gap-5 sm:grid-cols-4">
           <div><p className="cv-legend">open deals</p><p className="cv-heading mt-1">{formatCount(ledger.value.deals_opened)}</p></div>
           <div><p className="cv-legend">escrow held</p><p className="cv-heading mt-1">{formatGen(ledger.value.held)}</p></div>
