@@ -248,7 +248,6 @@ function toLedger(raw: unknown): Ledger | null {
     "deals_opened",
     "checks_run",
     "deliveries_verified",
-    "reversals_recorded",
     "protocol_fee",
   ];
   const out = {} as Ledger;

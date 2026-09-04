@@ -11,8 +11,8 @@
  *
  * The seven writes here are the seven the contract has. The product document lists ten and
  * describes an LLM adjudication step; the contract's header explains why the six harness-fixed
- * names are authoritative and why the dispute methods became a deterministic REVERSED state.
- * This file follows the contract.
+ * names are authoritative and why one dispute ground, TRANSFER_REVERSED, is left unimplemented
+ * rather than approximated on evidence that cannot support it. This file follows the contract.
  */
 
 import type { DealState, RefusalTag } from "@/lib/contract-types";
@@ -411,12 +411,6 @@ export const METHODS: Record<string, MethodSpec> = {
         because:
           "The transfer window closed without a check ever observing the delivery. This is the buyer's exit, and anyone may take it for them.",
       },
-      {
-        from: "REVERSED",
-        caller: "anyone",
-        because:
-          "The registry took the transfer back. No window is needed, because the fact that decides this was already recorded on chain.",
-      },
     ],
   },
   abandon: {
@@ -467,7 +461,6 @@ export const METHODS_BY_STATE: Record<DealState, string[]> = {
   OFFERED: ["arm", "abandon", "refund"],
   LOCKED: ["check_transfer", "abandon", "refund"],
   VERIFIED: ["settle", "check_transfer"],
-  REVERSED: ["refund"],
   RELEASED: [],
   REFUNDED: [],
 };

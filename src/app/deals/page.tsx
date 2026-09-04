@@ -76,7 +76,6 @@ export default async function RegisterPage() {
   const newestFirst = deals.value.slice().reverse();
   const live = newestFirst.filter((deal) => LIVE_STATES.includes(deal.state));
   const closed = newestFirst.filter((deal) => !LIVE_STATES.includes(deal.state));
-  const reversed = live.filter((deal) => deal.state === "REVERSED");
   const unchecked = neverChecked(live);
 
   return (
@@ -92,19 +91,9 @@ export default async function RegisterPage() {
           something at stake.
         </p>
 
-        <div className="cv-panel mt-6 grid gap-x-10 gap-y-6 p-6 plate:grid-cols-4">
+        <div className="cv-panel mt-6 grid gap-x-10 gap-y-6 p-6 plate:grid-cols-3">
           <Stat label="in escrow" value={formatCount(live.length)} />
           <Stat label="sum held" value={formatGen(escrowedTotal(live).toString())} />
-          <Stat
-            label="taken back by the registry"
-            value={
-              reversed.length === 0 ? (
-                <span className="cv-unchanged">none</span>
-              ) : (
-                formatCount(reversed.length)
-              )
-            }
-          />
           <Stat label="closed" value={formatCount(closed.length)} />
         </div>
         {unchecked > 0 ? (
@@ -227,7 +216,6 @@ export default async function RegisterPage() {
               "AWAITING_DELEGATION",
               "AWAITING_DNS",
               "VERIFIED",
-              "REVERSED",
             ] as const
           ).map((outcome) => {
             const text = CHECK_OUTCOME_TEXT[outcome];

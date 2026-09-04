@@ -662,14 +662,9 @@ const D1078: Deal = {
 };
 
 /* 12 ------------------------------------------------------------------------
- * REVERSED. The registration went back to the registrar the seller held it at when the deal
- * opened, and the buyer's control proof is gone. Both of the last two conditions held once
- * and were taken back, which is why both arcs are severed rather than only the second: the
- * contract requires both facts before it records a reversal at all.
- *
- * The delivered fields are still on the deal, from the check that verified. The last-check
- * fields are from the one that found the reversal. Printing either as "the current state"
- * would be a different claim from the other, so both are kept.
+ * VERIFIED, with a later check on record. Delivery is final once verified, so this later check
+ * only adds a row to `checks` and a fresh `last_check_*` snapshot; it never moves the state,
+ * however different the registrar or proof it observed might look from the delivery itself.
  */
 const D1077: Deal = {
   ...armed(
@@ -693,21 +688,21 @@ const D1077: Deal = {
     "2026-08-19T14:30:00Z",
     "2026-08-29T14:30:00Z",
   ),
-  state: "REVERSED",
+  state: "VERIFIED",
   verified_at: "2026-08-28T09:11:03Z",
   inspection_deadline: "2026-08-31T09:11:03Z",
   checks: "14",
   last_check_at: "2026-08-30T09:44:18Z",
-  last_check_outcome: "REVERSED",
+  last_check_outcome: "VERIFIED",
   last_check_note:
-    "the domain is back at IANA id 81, the registrar it was at when this deal opened, and the buyer's control proof is gone: the sponsoring registrar is IANA id 81, and this deal is for a transfer to 1910",
-  last_check_registrar_id: GANDI,
-  last_check_nameservers: "ns-1.gandi.net,ns-2.gandi.net",
-  last_check_statuses: "client transfer prohibited",
-  last_check_transfer_at: "2026-08-30T04:02:55Z",
+    "delivery still stands as of 2026-08-30T09:44:18Z. The buyer may settle now, and anyone may settle from 2026-08-31T09:11:03Z.",
+  last_check_registrar_id: CLOUDFLARE,
+  last_check_nameservers: CLOUDFLARE_NS,
+  last_check_statuses: "client delete prohibited,client update prohibited",
+  last_check_transfer_at: "2026-08-27T21:36:50Z",
   last_check_digest: fixtureDigest("check:CVY-1077:14"),
-  last_proof_outcome: "PROOF_NAME_MISSING",
-  last_proof_values: "",
+  last_proof_outcome: "PROOF_FOUND",
+  last_proof_values: `v1;deal=CVY-1077;buyer=${B2}`,
   buyer_proof_revealed: "True",
   delivered_registrar_id: CLOUDFLARE,
   delivered_transfer_at: "2026-08-27T21:36:50Z",
@@ -858,7 +853,6 @@ export const MOCK_LEDGER: Ledger = {
   deals_opened: "14",
   checks_run: "119",
   deliveries_verified: "3",
-  reversals_recorded: "1",
   protocol_fee: "0",
 };
 

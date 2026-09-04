@@ -17,7 +17,7 @@ The contract states its own boundary, in its header and in `parameters()`:
 
 - Network: StudioNet
 - Live app: https://conveyance-five.vercel.app
-- Canonical StudioNet deployment: `0x7C2f0B5F397957214b7D15120dCb9A5cDbd282d1`
+- Canonical StudioNet deployment: `0xa87eA0D26cBDC76f49cdB36dD6d52a9abB6f1693`
 - Historical / superseded deployment: `0x104767ad5d51b5004953e4fB9d5B548501aa9bd9`
 - Historical deployment transaction: `0x27ae8b590ece7c91280d21b28ca9817598b2d3e297453f113e17cdcaa0a9ac6d`
 - Submission record: [`docs/SUBMISSION.md`](docs/SUBMISSION.md)
@@ -314,7 +314,7 @@ npm run verify:deployment   # byte-for-byte checks the canonical StudioNet sourc
 npm run verify:schema       # verifies the canonical method table
 ```
 
-The current Git source is canonically deployed at `0x7C2f0B5F397957214b7D15120dCb9A5cDbd282d1`.
+The current source is canonically deployed at `0xa87eA0D26cBDC76f49cdB36dD6d52a9abB6f1693`.
 It is finalized, GenVM-successful, schema-verified and source-parity verified. Its register is
 currently empty, so historical demonstration deals are not current app state. The old address
 and its transactions remain explicitly **HISTORICAL / SUPERSEDED** for auditability.

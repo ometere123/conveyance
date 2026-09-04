@@ -299,7 +299,6 @@ def test_two_deals_settling_and_refunding_leave_the_counters_conserved(
 
     assert ledger["deals_opened"] == "3"
     assert ledger["deliveries_verified"] == "1"
-    assert ledger["reversals_recorded"] == "0"
 
 
 def test_an_escrow_at_the_ceiling_settles_for_the_same_figure_it_arrived_as(
@@ -393,7 +392,7 @@ def test_a_terminal_deal_cannot_be_paid_out_twice(
         direct_vm.sender = caller
         with direct_vm.expect_revert("settle() needs VERIFIED"):
             contract.settle(DEAL_ID)
-        with direct_vm.expect_revert("a refund needs OFFERED, LOCKED or REVERSED"):
+        with direct_vm.expect_revert("a refund needs OFFERED or LOCKED"):
             contract.refund(DEAL_ID)
         with direct_vm.expect_revert("abandon() needs OFFERED or LOCKED"):
             contract.abandon(DEAL_ID)

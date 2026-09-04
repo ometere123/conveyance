@@ -7,12 +7,14 @@
  * than being guessed at in a component.
  *
  * THE CONTRACT IS THE SPECIFICATION. Its header documents a deliberate divergence from the
- * product document: ten methods become six, and the four-ground LLM dispute step is replaced
- * by a deterministic REVERSED state that `check_transfer` reaches from the same two sources the
- * happy path reads. Three of the four grounds were fields in RDAP or a TXT record, and the
- * fourth was already marked non-adjudicable, so a model would have been asked to opine on
- * facts the contract can read. This file follows the contract, not the document, because the
- * contract is what gets deployed and what a reader can check.
+ * product document: ten methods become six, and the four-ground LLM dispute step is replaced by
+ * fields the contract reads directly from RDAP or a TXT record for three of the four grounds. A
+ * model would have been asked to opine on facts the contract can read, which the house rule for
+ * this project forbids. The fourth ground, `TRANSFER_REVERSED`, is left unimplemented rather
+ * than approximated: RDAP names a sponsoring registrar and never an account, so no signal this
+ * contract can read distinguishes a real reversal from a buyer moving their own delivered
+ * domain around, and once VERIFIED, delivery is final. This file follows the contract, not the
+ * document, because the contract is what gets deployed and what a reader can check.
  */
 
 /* -------------------------------------------------------------------------- */
@@ -146,27 +148,29 @@ export function taggedRefusal(line: string): { tag: RefusalTag; rest: string } |
 /* -------------------------------------------------------------------------- */
 
 /**
- * Six states. OFFERED to LOCKED to VERIFIED to RELEASED is the path a completed sale takes;
- * REFUNDED and REVERSED are the two other ways it ends, and REVERSED is not terminal on its
- * own because the money still has to be returned out of it.
+ * Five states. OFFERED to LOCKED to VERIFIED to RELEASED is the path a completed sale takes;
+ * REFUNDED is the other way it ends.
  *
  * A deal never returns to an earlier state, which is what makes a state name safe to print
- * beside a sum of money. VERIFIED to REVERSED is the one backwards-looking transition and it
- * is not a retreat: it records that the registry took back a transfer it had published.
+ * beside a sum of money. VERIFIED is final: an earlier contract version had a sixth state,
+ * REVERSED, reached by a backwards transition out of VERIFIED when the registry looked like it
+ * had taken a transfer back. It was removed, because RDAP names a sponsoring registrar and
+ * never an account, so that signal could not actually be told apart from a buyer moving their
+ * own delivered domain around for reasons that have nothing to do with the deal. See
+ * `_check_from_verified` in the contract for the fuller reasoning.
  */
-export type DealState = "OFFERED" | "LOCKED" | "VERIFIED" | "REVERSED" | "RELEASED" | "REFUNDED";
+export type DealState = "OFFERED" | "LOCKED" | "VERIFIED" | "RELEASED" | "REFUNDED";
 
 export const DEAL_STATES: DealState[] = [
   "OFFERED",
   "LOCKED",
   "VERIFIED",
-  "REVERSED",
   "RELEASED",
   "REFUNDED",
 ];
 
 /** The states in which the contract is still holding somebody's money. */
-export const LIVE_STATES: DealState[] = ["OFFERED", "LOCKED", "VERIFIED", "REVERSED"];
+export const LIVE_STATES: DealState[] = ["OFFERED", "LOCKED", "VERIFIED"];
 
 /**
  * Every state gets a word, never only a colour. `register` is the conveyancing-register
@@ -191,13 +195,7 @@ export const DEAL_STATE_TEXT: Record<DealState, { label: string; register: strin
       label: "Verified",
       register: "Transfer and control observed in the registry and the zone",
       holds:
-        "The consideration is in escrow. The buyer may release it at once; anyone may once the inspection window closes. No refund route runs from here.",
-    },
-    REVERSED: {
-      label: "Reversed",
-      register: "The registry took the transfer back after it had verified",
-      holds:
-        "The consideration is in escrow and returnable to the buyer immediately. Anyone may return it, because the destination is fixed.",
+        "The consideration is in escrow. The buyer may release it at once; anyone may once the inspection window closes. Verified delivery is final: no later check moves this deal anywhere, and no refund route runs from here.",
     },
     RELEASED: {
       label: "Released",
@@ -228,8 +226,7 @@ export type CheckOutcome =
   | "AWAITING_TRANSFER"
   | "AWAITING_DELEGATION"
   | "AWAITING_DNS"
-  | "VERIFIED"
-  | "REVERSED";
+  | "VERIFIED";
 
 /** The contract's classification order. Position in this array is the whole inference. */
 export const CHECK_ORDER: CheckOutcome[] = [
@@ -275,12 +272,7 @@ export const CHECK_OUTCOME_TEXT: Record<CheckOutcome, { label: string; means: st
   VERIFIED: {
     label: "Verified",
     means:
-      "The registry reports the transfer to the named registrar, the delegation matches, and both resolvers saw the buyer's control proof and agreed on it.",
-  },
-  REVERSED: {
-    label: "Reversed",
-    means:
-      "This deal had verified, and a later check found the registration back at the registrar it came from. The escrow is returnable to the buyer.",
+      "The registry reports the transfer to the named registrar, the delegation matches, and both resolvers saw the buyer's control proof and agreed on it. Once reached, this outcome is final.",
   },
 };
 
@@ -521,7 +513,6 @@ export type Ledger = {
   deals_opened: string;
   checks_run: string;
   deliveries_verified: string;
-  reversals_recorded: string;
   /** "0". There is no protocol fee, and the field exists so its absence is checkable. */
   protocol_fee: string;
 };
@@ -604,13 +595,12 @@ export const CONDITION_TEXT: Record<
  * transfer. Collapsing them is how an interface ends up telling a seller their delegation is
  * wrong when nothing ever looked at it.
  */
-export type ConditionOutcome = "MET" | "BLOCKING" | "NOT_REACHED" | "REVERSED" | "UNCHECKED";
+export type ConditionOutcome = "MET" | "BLOCKING" | "NOT_REACHED" | "UNCHECKED";
 
 export const CONDITION_OUTCOME_WORD: Record<ConditionOutcome, string> = {
   MET: "engraved",
   BLOCKING: "not yet",
   NOT_REACHED: "not reached",
-  REVERSED: "taken back",
   UNCHECKED: "unchecked",
 };
 
@@ -619,7 +609,5 @@ export const CONDITION_OUTCOME_NOTE: Record<ConditionOutcome, string> = {
   BLOCKING: "The sources were read and this is the condition they stopped at.",
   NOT_REACHED:
     "The check stopped at an earlier condition, so the delivery decision did not rest on this one. Nothing drawn here is a claim about it in either direction.",
-  REVERSED:
-    "This condition held once and a later check found the registry had taken it back.",
   UNCHECKED: "No check has run against this deal, so nothing has been read about this condition.",
 };

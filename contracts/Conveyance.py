@@ -17,17 +17,24 @@ THERE IS NO MODEL IN THIS CONTRACT. Every consensus block is `gl.eq_principle.st
 That is a deliberate divergence from the product document, which specifies an LLM
 adjudication step over four dispute grounds, and it is worth the paragraph it costs.
 
-Three of those four grounds are fields. `TRANSFER_REVERSED` is the `transfer` event and the
-registrar's IANA id in RDAP. `DOMAIN_SUSPENDED` is `clientHold` or `serverHold` in the
-status array. `WRONG_DOMAIN` is a string comparison against `ldhName`. `DNS_CONTROL_REVOKED`
-is the absence of a TXT record two resolvers were asked about. The document's fourth ground,
-`PRIVATE_ACCOUNT_CUSTODY`, it already marks non-adjudicable. So the model would be asked to
-opine on facts the contract can read, which is the one thing the house rule for this project
-forbids: the model is asked what the evidence says, never what the contract should do. Here
-there is no natural-language evidence for it to read. RDAP is structured JSON and a TXT
-record is a byte string. Adding an inference step would add a way to be wrong and no way to
-be right, so the dispute methods are replaced by a deterministic `REVERSED` state that
-`check_transfer` reaches from the same two sources the happy path already reads.
+Two of those four grounds are fields the contract reads directly. `DOMAIN_SUSPENDED` is
+`clientHold` or `serverHold` in the status array. `WRONG_DOMAIN` is a string comparison
+against `ldhName`. `DNS_CONTROL_REVOKED`, the absence of a TXT record two resolvers were
+asked about, gates delivery itself: `check_transfer` will not call a domain VERIFIED while
+either resolver disagrees or is silent. The document's fourth ground, `PRIVATE_ACCOUNT_CUSTODY`,
+it already marks non-adjudicable.
+
+`TRANSFER_REVERSED` is the one ground this contract does not implement, and says so rather
+than approximating it. An earlier version read the `transfer` event and the registrar's IANA
+id in RDAP and moved a verified deal to a deterministic `REVERSED` state on that evidence.
+It was removed: RDAP names a sponsoring registrar, not an account, so "the registrar id is
+back at the seller's" cannot be told apart from "the buyer already used that registrar, or
+moved the domain to a second account there for reasons of their own." No inference step, by
+a model or otherwise, closes that gap, because the fact it would be inferring is not present
+in the evidence at all. So `TRANSFER_REVERSED` is left unhandled rather than handled on
+evidence that cannot support it, and delivery, once VERIFIED, is final. See
+`_check_from_verified` for the fuller reasoning and `refund` for what that means for the
+buyer's escrow.
 
 METHOD NAMES. The offline harness fixes six: `open_deal`, `arm`, `check_transfer`, `settle`,
 `refund`, `abandon`. The product document lists ten. The harness is the executable
@@ -37,7 +44,7 @@ specification, so the six are authoritative and the mapping is:
     arm            accept_deal, plus the seller's DNS control proof
     check_transfer verify_delivery
     settle         accept_delivery and finalize_delivery, merged on the caller
-    refund         refund_expired, plus the refund out of REVERSED
+    refund         refund_expired
     abandon        cancel_offer, widened to cover a seller who gives up after arming
 
 `abandon` needs its rule said out loud, because who may call it is the whole question. While
@@ -1120,23 +1127,38 @@ def classify_proof(corroboration, expected_token):
     tag a refusal would carry, so the caller can tell "the name does not exist" from "the
     name exists and the token is not on it yet" from "the token is there". A proof that
     cannot be found is not a proof that failed, and neither is delivery.
+
+    Also returns `corroborated_absent`, which is narrower than "not PROOF_FOUND" and is the
+    only field a caller may use to conclude the proof is actually gone rather than merely
+    unconfirmed this round. It is True in exactly two cases, both of them two independent
+    resolvers agreeing with each other: they saw the same non-empty TXT set and the token is
+    not in it, or they both returned NXDOMAIN for the name. Every other case that reaches
+    here is disagreement between the resolvers, one of them answering nothing, mismatched
+    query names, or a single NXDOMAIN against an answer from the other resolver, and none of
+    those is evidence that a record was removed. The contract's `_check_from_verified` is the
+    caller this matters for: reading disagreement as disappearance there would let ordinary
+    DNS propagation lag or one resolver's outage reverse a delivery that never actually moved.
     """
     assert_proof_token_shape(expected_token)
     if not isinstance(corroboration, Corroboration):
         raise expected("classify_proof takes a Corroboration",
                        type(corroboration).__name__)
     if not corroboration.agreed:
+        all_nxdomain = (len(corroboration.observations) >= 2
+                        and all(obs.nxdomain for obs in corroboration.observations))
         if any(obs.nxdomain for obs in corroboration.observations):
             return {"outcome": PROOF_NAME_MISSING, "tag": corroboration.tag,
-                    "reason": corroboration.reason}
+                    "reason": corroboration.reason, "corroborated_absent": all_nxdomain}
         return {"outcome": PROOF_ABSENT, "tag": corroboration.tag,
-                "reason": corroboration.reason}
+                "reason": corroboration.reason, "corroborated_absent": False}
     if expected_token in corroboration.values:
         return {"outcome": PROOF_FOUND, "tag": None,
-                "reason": None, "digest": corroboration.digest}
+                "reason": None, "digest": corroboration.digest,
+                "corroborated_absent": False}
     return {"outcome": PROOF_ABSENT, "tag": TAG_TRANSIENT,
             "reason": "both resolvers agree on the TXT set and the expected token is not "
-                      "in it, which is an absent proof and may be incomplete propagation"}
+                      "in it, which is an absent proof and may be incomplete propagation",
+            "corroborated_absent": True}
 
 
 # ======================================================================================
@@ -1251,7 +1273,6 @@ CHECK_INTERVAL_SECONDS = 300
 ST_OFFERED = "OFFERED"
 ST_LOCKED = "LOCKED"
 ST_VERIFIED = "VERIFIED"
-ST_REVERSED = "REVERSED"
 ST_RELEASED = "RELEASED"
 ST_REFUNDED = "REFUNDED"
 
@@ -1269,7 +1290,6 @@ OUT_AWAITING_TRANSFER = "AWAITING_TRANSFER"
 OUT_AWAITING_DELEGATION = "AWAITING_DELEGATION"
 OUT_AWAITING_DNS = "AWAITING_DNS"
 OUT_SUSPENDED = "SUSPENDED"
-OUT_REVERSED = "REVERSED"
 
 STATUS_PENDING_DELETE = "pending delete"
 
@@ -1440,7 +1460,6 @@ class Conveyance(gl.Contract):
     deals_opened: u256
     checks_run: u256
     deliveries_verified: u256
-    reversals_recorded: u256
 
     def __init__(self):
         self.total_escrowed = u256(0)
@@ -1449,7 +1468,6 @@ class Conveyance(gl.Contract):
         self.deals_opened = u256(0)
         self.checks_run = u256(0)
         self.deliveries_verified = u256(0)
-        self.reversals_recorded = u256(0)
 
     # ------------------------------------------------------------------
     # Time. Every timestamp this contract compares is produced by `_require_now` or
@@ -2211,9 +2229,8 @@ class Conveyance(gl.Contract):
         because something was. Neither is a delivery, and the deadline keeps running through
         both.
 
-        From VERIFIED this method still runs, and it is how a reversal is caught. See
-        `_check_from_verified` for why only a reversal back to the seller's own registrar
-        counts.
+        From VERIFIED this method still runs, and still records what it saw, but delivery is
+        final by then. See `_check_from_verified` for why.
         """
         deal = self._require_deal(deal_id)
         key = deal.deal_id
@@ -2294,55 +2311,41 @@ class Conveyance(gl.Contract):
 
     def _check_from_verified(self, deal: Deal, now: str, observed: dict, outcome: str,
                              verdict: dict) -> str:
-        """A check run after delivery was accepted. Either nothing changed, or it reversed.
+        """A check run after delivery was accepted. It records what it saw and changes nothing.
 
-        A reversal is narrow on purpose, and this is the one place in the contract where the
-        narrowness matters more than the coverage. Requiring only "no longer delivered" would
-        hand the buyer a way to take both the domain and the escrow: they now control the
-        name, so they can move it and delete the proof record whenever they like.
+        VERIFIED is final. An earlier version of this method could move a verified deal to a
+        REVERSED state, refundable to the buyer, when the domain looked like it had gone back
+        to the seller's original registrar with the buyer's proof gone. That state is not
+        here any more, and not because the underlying signals stopped being readable: it is
+        gone because none of them, singly or together, can actually prove the domain returned
+        to the seller. RDAP names a sponsoring registrar, not an account, and a buyer who
+        already used that same registrar for other domains, or who moves the delivered domain
+        to a second account at it for reasons that have nothing to do with this deal, produces
+        exactly the same observation as a real reversal. Tightening the evidence bar (a
+        genuinely corroborated absent proof, a fresh registry-recorded transfer event, not
+        merely a matching registrar id) narrowed that false positive without closing it, and a
+        narrowed false positive is still a false positive: it would still let an ordinary,
+        unrelated DNS event strip a seller of an escrow they already earned.
 
-        So a reversal is only recorded when the domain has gone back to the registrar the
-        SELLER had it at when the deal opened, and the buyer's control proof is gone. Moving
-        the domain to some third registrar is the buyer exercising the control they paid for
-        and is not a reversal. The window is the inspection period, which bounds this to 72
-        hours after delivery rather than leaving it open for the life of the deal.
-
-        The residual risk is stated rather than closed: a buyer who transfers the domain back
-        to the seller's original registrar and deletes their own proof record would reach
-        REVERSED. They would be giving up the asset to recover the price, and the seller would
-        end up holding the domain again, so the trade is not obviously profitable. It is a
-        real gap and not a claimed one.
+        So this method draws the line the other way. Once the registry and both resolvers have
+        agreed that the transfer completed and the buyer's proof is up, that fact is not
+        revisited. The buyer's protection is the inspection window itself: they can withhold
+        `settle` for up to 72 hours and read exactly what this method continues to record on
+        every check they or anyone else runs, and if the domain and the proof still stand at
+        the end of it, anyone may settle. What this method will not do is take an escrow the
+        seller already delivered against and hand it back on a signal that cannot actually
+        distinguish "the seller took the domain back" from "the buyer did something with their
+        own property that this contract has no business second-guessing."
         """
         key = deal.deal_id
+        self.deals[key] = deal
         if outcome == OUT_VERIFIED:
-            self.deals[key] = deal
             return ("%s %s: delivery still stands as of %s. The buyer may settle now, and "
                     "anyone may settle from %s."
                     % (key, ST_VERIFIED, now, deal.inspection_deadline))
-
-        back_to_seller = (str(observed.get("registrar_id", ""))
-                          == deal.baseline_registrar_id)
-        proof_gone = str(observed.get("proof_outcome", "")) != PROOF_FOUND
-        inside_window = not self._at_or_after(now, deal.inspection_deadline)
-
-        if back_to_seller and proof_gone and inside_window:
-            deal.state = ST_REVERSED
-            deal.last_check_outcome = OUT_REVERSED
-            deal.last_check_note = (
-                "the domain is back at IANA id %s, the registrar it was at when this deal "
-                "opened, and the buyer's control proof is gone: %s"
-                % (deal.baseline_registrar_id, str(verdict["note"])))[:400]
-            self.deals[key] = deal
-            self.reversals_recorded = u256(int(self.reversals_recorded) + 1)
-            return ("%s %s: %s. The escrow is refundable to the buyer."
-                    % (key, ST_REVERSED, deal.last_check_note))
-
-        self.deals[key] = deal
-        why = "outside the inspection window" if not inside_window else (
-            "not a reversal to the seller's registrar" if not back_to_seller
-            else "the buyer's control proof is still corroborated")
-        return ("%s %s: %s. Recorded and not treated as a reversal, because it is %s."
-                % (key, ST_VERIFIED, str(verdict["note"]), why))
+        return ("%s %s: %s. Recorded for the record; verified delivery is final and this "
+                "observation does not change the deal's state."
+                % (key, ST_VERIFIED, str(verdict["note"])))
 
     # ==================================================================================
     # settle
@@ -2418,15 +2421,17 @@ class Conveyance(gl.Contract):
 
     @gl.public.write
     def refund(self, deal_id: str) -> str:
-        """Return the escrow to the buyer. Callable by anyone, on a deadline or a reversal.
+        """Return the escrow to the buyer. Callable by anyone, on a deadline.
 
-        Three doors, and no others. From OFFERED once the seller's 48 hours to arm have run
-        out. From LOCKED once the 10 days to complete the transfer have run out. From REVERSED
-        immediately, because `check_transfer` already established the fact on chain.
+        Two doors, and no others. From OFFERED once the seller's 48 hours to arm have run
+        out. From LOCKED once the 10 days to complete the transfer have run out.
 
-        Not callable from VERIFIED. A seller who delivered is owed the price, and a buyer who
-        thinks delivery came apart has `check_transfer`, which will record it and reach
-        REVERSED if the registry agrees.
+        Not callable from VERIFIED, and there is no path back into refundability from it.
+        Once the registry and both resolvers have agreed the transfer completed and the
+        buyer's proof is up, that is final: a seller who delivered is owed the price, and
+        RDAP has no signal that distinguishes the seller genuinely taking the domain back
+        from the buyer doing something unrelated with the property they already paid for.
+        See `_check_from_verified` for the fuller reasoning.
 
         Permissionless because the destination is fixed: the money goes to the buyer whoever
         calls, so a third party calling it can only ever help.
@@ -2448,11 +2453,9 @@ class Conveyance(gl.Contract):
                                 deal.last_check_note or "no check has run yet"))
             why = ("the transfer did not complete by %s, and the last observation was %s"
                    % (deal.transfer_deadline, deal.last_check_outcome or "none"))
-        elif deal.state == ST_REVERSED:
-            why = deal.last_check_note or "the delivery reversed"
         else:
-            self._reject("deal %s is %s; a refund needs %s, %s or %s"
-                         % (key, deal.state, ST_OFFERED, ST_LOCKED, ST_REVERSED))
+            self._reject("deal %s is %s; a refund needs %s or %s"
+                         % (key, deal.state, ST_OFFERED, ST_LOCKED))
             return ""
 
         returned = int(deal.escrow)
@@ -2482,8 +2485,8 @@ class Conveyance(gl.Contract):
         let that transfer complete and then walk off with the price. The buyer's remedy after
         LOCKED is the transfer deadline, which `refund` enforces without the seller present.
 
-        Never from VERIFIED, RELEASED, REFUNDED or REVERSED. After delivery this is no longer
-        anyone's to give up, and the three terminal states are terminal.
+        Never from VERIFIED, RELEASED or REFUNDED. After delivery this is no longer anyone's
+        to give up, and the latter two states are terminal.
         """
         deal = self._require_deal(deal_id)
         key = deal.deal_id
@@ -2667,7 +2670,6 @@ class Conveyance(gl.Contract):
             "deals_opened": str(int(self.deals_opened)),
             "checks_run": str(int(self.checks_run)),
             "deliveries_verified": str(int(self.deliveries_verified)),
-            "reversals_recorded": str(int(self.reversals_recorded)),
             "protocol_fee": "0",
         }
 

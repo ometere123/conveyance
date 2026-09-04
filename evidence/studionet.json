@@ -5,23 +5,23 @@
 
   "network": "studionet",
   "endpoint": "https://studio.genlayer.com/api",
-  "contract": "0x7C2f0B5F397957214b7D15120dCb9A5cDbd282d1",
-  "recordedAt": "2026-09-01",
+  "contract": "0xa87eA0D26cBDC76f49cdB36dD6d52a9abB6f1693",
+  "recordedAt": "2026-09-04",
   "currentDeployment": {
-    "gitCommit": "3eb6d8e7ddc0bee424ed63323a338829026e77b8",
-    "deploymentTransaction": "0xfe5547f665b6750cf91b31b917779f9af3ed5876a34c24c8b56eb70e4f2b29b6",
-    "contract": "0x7C2f0B5F397957214b7D15120dCb9A5cDbd282d1",
+    "gitCommit": null,
+    "deploymentTransaction": "0x552ba89f835ef769890af241a07b4996f422011d99a7d1ed18b45348ecf02499",
+    "contract": "0xa87eA0D26cBDC76f49cdB36dD6d52a9abB6f1693",
     "status": "FINALIZED",
     "genvmResult": "SUCCESS",
     "rpcResult": "0x1",
-    "sourceSha256": "665d2b3c497987ffb704018f9b675e5d839b2d9356b3371ab36a635c142fc134",
-    "sourceBytes": 131335,
+    "sourceSha256": "83c9c439e3da904849ed302feb62cdcb0173f4177715a5d179ba0610e5e71c4d",
+    "sourceBytes": 132381,
     "sourceParity": "PASS",
     "schema": "PASS",
     "safeRead": { "method": "list_deals", "args": [], "result": [] },
     "valueInvariant": { "contractBalanceWei": "0", "heldEscrowWei": "0", "unexplainedWei": "0" }
   },
-  "currentExercises": [{"label":"invalid settlement on missing deal","tx":"0x133b1602fb4f8d2380748ee9d8bfe5c55bffa8724f65485ca1983ceaa41346ca","method":"settle","args":["missing-live-deal"],"caller":"0xb29Ead15B1E8A2420faE84de974088f67a15ccC2","recipient":"0x7C2f0B5F397957214b7D15120dCb9A5cDbd282d1","valueWei":"0","finality":"FINALIZED","genvm":"ERROR","classification":"FAILED FLOW / EXPECTED REJECTION","stateAfter":{"list_deals":[]},"proofStatus":"PROVEN LIVE"}],
+  "currentExercises": [],
   "firstRecordedAt": "2026-08-31",
 
   "headline": {
@@ -45,8 +45,8 @@
   },
 
   "signer": {
-    "address": "0xb29Ead15B1E8A2420faE84de974088f67a15ccC2",
-    "note": "Obtained through the CLI's own BaseAction/getClient path and the OS-keychain cache populated by `genlayer account unlock`. No key was exported, no wallet or keystore was created, no mnemonic or keystore file was opened, and no password was supplied on a command line or written to a file."
+    "address": "0x21892BbA93381D94037Fb4aaB01CAFbdf4453B56",
+    "note": "A dedicated 'conveyance-deployer' keystore account, created with `genlayer account create` and unlocked with `genlayer account unlock` so the private key is cached in the OS keychain rather than typed per command. Funded from the previous deployer account (0xb29Ead15B1E8A2420faE84de974088f67a15ccC2, now retired from active use though its keystore file was not deleted) with a single `genlayer account send` transfer, visible on chain as a normal transaction from that address to this one. No key was exported, no mnemonic or keystore file was opened outside the CLI's own commands, and no password was supplied on a command line or written to a file this repository carries."
   },
 
   "deployment": {
@@ -602,6 +602,20 @@
   },
 
   "historicalDeployments": [
+    {
+      "contract": "0x4Bf0Ef139856e1b3a036D79B6D864284131fe65D",
+      "deploymentTransaction": "0x5d390f0aad9e0793e5ba18ee47aad2c1b29020c4c8ae43b936e48d526030df76",
+      "supersededOn": "2026-09-04",
+      "supersededBecause": "Tightened reversal evidence (corroborated-absent proof plus a fresh registry-recorded transfer event) but still had a REVERSED state reachable from VERIFIED. Removed for the current deployment: RDAP names a registrar, never an account, so no version of that check distinguishes a real reversal from a buyer moving their own delivered domain around. VERIFIED delivery is final now.",
+      "evidenceNote": "Canonical for a few hours on 2026-09-04, between 0x7C2f0B5F397957214b7D15120dCb9A5cDbd282d1 and the current deployment. Its transactions prove the behaviour of this contract only."
+    },
+    {
+      "contract": "0x7C2f0B5F397957214b7D15120dCb9A5cDbd282d1",
+      "deploymentTransaction": "0xfe5547f665b6750cf91b31b917779f9af3ed5876a34c24c8b56eb70e4f2b29b6",
+      "supersededOn": "2026-09-04",
+      "supersededBecause": "Superseded by the reversal-evidence tightening above, and then by removing the REVERSED path entirely.",
+      "evidenceNote": "Its transactions prove the behaviour of this contract only."
+    },
     {
       "contract": "0xC162BA113137539fD734e986403C1FA5fAbA6109",
       "deploymentTransaction": "0x2ca51716f36f14be5a21d0e07d2e4497f7189fb943ab2b130ad619215cfecd5e",

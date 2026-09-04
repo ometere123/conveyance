@@ -2,16 +2,16 @@
   "canonicalStatus": "CANONICAL",
   "canonicalStatusNote": "Current source deployed and verified byte-for-byte on StudioNet.",
   "network": "studionet",
-  "contract": "0x7C2f0B5F397957214b7D15120dCb9A5cDbd282d1",
-  "deploymentTransaction": "0xfe5547f665b6750cf91b31b917779f9af3ed5876a34c24c8b56eb70e4f2b29b6",
-  "deploymentSubmittedAt": "2026-09-01T22:59:58.668170+00:00",
+  "contract": "0xa87eA0D26cBDC76f49cdB36dD6d52a9abB6f1693",
+  "deploymentTransaction": "0x552ba89f835ef769890af241a07b4996f422011d99a7d1ed18b45348ecf02499",
+  "deploymentSubmittedAt": "2026-09-04T17:29:41.469680+00:00",
   "deploymentSubmittedAtNote": "The timestamp StudioNet records against the deployment transaction itself, which is the only deployment time this repository can prove.",
-  "gitCommitCarryingDeployedSource": "3eb6d8e7ddc0bee424ed63323a338829026e77b8",
+  "gitCommitCarryingDeployedSource": null,
   "contractFile": "contracts/Conveyance.py",
-  "contractSha256": "665d2b3c497987ffb704018f9b675e5d839b2d9356b3371ab36a635c142fc134",
-  "contractBytes": 131335,
+  "contractSha256": "83c9c439e3da904849ed302feb62cdcb0173f4177715a5d179ba0610e5e71c4d",
+  "contractBytes": 132381,
   "deployedSourceVerified": true,
-  "bindingNote": "StudioNet receipt is FINALIZED with result 6 and leader execution_result SUCCESS. `getContractCode` returned 131335 UTF-8 bytes; an in-memory byte comparison found no differing byte and SHA-256 equals the repository source. No framing or normalization was applied to the parity comparison.",
+  "bindingNote": "StudioNet receipt is FINALIZED with result 6 and leader execution_result SUCCESS. npm run verify:deployment re-read the deployed code and confirmed it is byte-for-byte and SHA-256 identical to the repository working-tree source. No framing or normalization was applied to the parity comparison. The source changes are not committed in this checkout at the moment of writing, so no commit id is claimed; this file is updated again once they are.",
   "runtimePin": {
     "firstLine": "# { \"Depends\": \"py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6\" }",
     "note": "Without this line a deploy reports ACCEPTED, then FINALIZED, and returns a contract address with nothing registered at it. It fails like a success. One earlier attempt was lost that way and is recorded under failedDeployment."
@@ -24,6 +24,24 @@
   ],
   "evidence": "evidence/studionet.json",
   "historicalDeployments": [
+    {
+      "contract": "0x4Bf0Ef139856e1b3a036D79B6D864284131fe65D",
+      "deploymentTransaction": "0x5d390f0aad9e0793e5ba18ee47aad2c1b29020c4c8ae43b936e48d526030df76",
+      "gitCommitCarryingDeployedSource": null,
+      "deployedSourceVerified": true,
+      "supersededOn": "2026-09-04",
+      "supersededBecause": "That deployment tightened reversal evidence requirements (a corroborated-absent proof and a fresh registry-recorded transfer event, not merely a matching registrar id) but still had a REVERSED state reachable from VERIFIED. It was superseded because RDAP names a sponsoring registrar and never an account, so no version of that check can actually distinguish a real reversal from a buyer moving their own delivered domain around. The REVERSED state and every path into it were removed: verified delivery is now final, which is what this deployment's source does differently.",
+      "evidenceNote": "This deployment was canonical for a few hours on 2026-09-04, between the previous deployment and the current one. Its evidence remains truthful for that address only."
+    },
+    {
+      "contract": "0x7C2f0B5F397957214b7D15120dCb9A5cDbd282d1",
+      "deploymentTransaction": "0xfe5547f665b6750cf91b31b917779f9af3ed5876a34c24c8b56eb70e4f2b29b6",
+      "gitCommitCarryingDeployedSource": "3eb6d8e7ddc0bee424ed63323a338829026e77b8",
+      "deployedSourceVerified": true,
+      "supersededOn": "2026-09-04",
+      "supersededBecause": "The current working-tree source added stricter reversal evidence requirements and corroborated DNS-absence tracking, so it required a fresh deployment.",
+      "evidenceNote": "This deployment was canonical until the source was deployed at 0x4Bf0Ef139856e1b3a036D79B6D864284131fe65D. Its evidence remains truthful for that address only."
+    },
     {
       "contract": "0xC162BA113137539fD734e986403C1FA5fAbA6109",
       "deploymentTransaction": "0x2ca51716f36f14be5a21d0e07d2e4497f7189fb943ab2b130ad619215cfecd5e",

@@ -222,32 +222,34 @@ test("arm, check_transfer, settle and abandon open exactly where the contract le
 });
 
 /**
- * `refund` is the one write that does not use `_require_state`, because each of its three doors has
+ * `refund` is the one write that does not use `_require_state`, because each of its two doors has
  * a different condition and the refusal has to say which one was missed. Its states are read out of
  * the branch chain instead, and the final `else` is what refuses VERIFIED.
  */
-test("refund's three doors are the three branches the contract actually has", () => {
+test("refund's two doors are the two branches the contract actually has", () => {
   const branches = [...CONTRACT.matchAll(/deal\.state == (ST_[A-Z]+):/g)].map((m) => m[1]);
-  for (const state of ["ST_OFFERED", "ST_LOCKED", "ST_REVERSED"]) {
+  for (const state of ["ST_OFFERED", "ST_LOCKED"]) {
     assert.ok(branches.includes(state), `refund no longer branches on ${state}`);
   }
+  assert.ok(!branches.includes("ST_REVERSED"), "refund still branches on a removed state");
   assert.deepEqual(METHODS.refund.doors.map((door) => door.from).sort(), [
     "LOCKED",
     "OFFERED",
-    "REVERSED",
   ]);
 });
 
 /**
- * VERIFIED is the state a refund must not run from. A seller who delivered is owed the price, and
- * a buyer who believes the delivery came apart has `check_transfer`, which can reach REVERSED and
- * open the refund door properly. A control offering a refund from VERIFIED would be offering a
- * delivered seller's money back.
+ * VERIFIED is the state a refund must not run from, and it has no route back into refundability at
+ * all now: an earlier contract version could reach a REVERSED state from VERIFIED and open the
+ * refund door from there, and that path was removed because RDAP cannot actually distinguish a real
+ * reversal from a buyer moving their own delivered domain around. A seller who delivered is owed
+ * the price, full stop. A control offering a refund from VERIFIED would be offering a delivered
+ * seller's money back.
  */
 test("no refund door runs from VERIFIED, and the contract still refuses one", () => {
   assert.ok(!METHODS.refund.doors.some((door) => door.from === "VERIFIED"));
   assert.ok(!METHODS_BY_STATE.VERIFIED.includes("refund"));
-  assert.match(CONTRACT, /a refund needs %s, %s or %s/);
+  assert.match(CONTRACT, /a refund needs %s or %s/);
 });
 
 test("arm is seller only, and the contract compares the sender to the seller", () => {
@@ -352,7 +354,7 @@ test("RELEASED and REFUNDED offer nothing, because a closed deal is closed", () 
 });
 
 test("every live state offers at least one way out, so no deal can strand", () => {
-  for (const state of ["OFFERED", "LOCKED", "VERIFIED", "REVERSED"] as DealState[]) {
+  for (const state of ["OFFERED", "LOCKED", "VERIFIED"] as DealState[]) {
     const movers = METHODS_BY_STATE[state].filter((method) => METHODS[method].movesValue);
     assert.ok(movers.length > 0, `${state} has no route that returns or releases the escrow`);
   }

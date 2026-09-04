@@ -162,19 +162,6 @@ export function DealActions({
         />
       ) : null}
 
-      {deal.state === "REVERSED" ? (
-        <ActionCard
-          method="refund"
-          state="REVERSED"
-          title="Return the consideration"
-          what="Returns the escrow to the buyer because a check found the registration back with the seller's own registrar. No window is needed: the fact that decides this is already on chain."
-          buttonLabel="Return it to the buyer"
-          args={[deal.deal_id]}
-          dealId={deal.deal_id}
-          blocked={null}
-        />
-      ) : null}
-
       {deal.state === "RELEASED" || deal.state === "REFUNDED" ? (
         <section className="cv-panel p-6">
           <h3 className="cv-heading">Closed</h3>

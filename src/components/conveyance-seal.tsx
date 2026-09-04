@@ -7,33 +7,33 @@
  * would say "three things, none of them done", where this says "one instrument, not yet
  * executed". The difference is the product.
  *
- * FIVE TREATMENTS, AND WHY FIVE RATHER THAN THREE.
+ * FOUR TREATMENTS, AND WHY FOUR RATHER THAN THREE.
  *
  *   MET          a solid engraved arc. The line was cut.
  *   BLOCKING     the empty channel with its two end ticks cut. The engraver reached this arc,
  *                set his marks and stopped. The condition was read and does not hold.
  *   NOT_REACHED  guide dots and no cut. An earlier condition stopped the check, so the delivery
  *                decision never rested on this one and no claim was ever engraved.
- *   REVERSED     cut, then severed, with a radial slash across the break. It held once and the
- *                registry took it back.
  *   UNCHECKED    the bare channel. No check has run against this deal at all.
  *
- * Solid, ticked, dotted, severed, absent. Each is a different topology rather than a different
- * shade, so none of the five depends on hue and all five survive a monochrome print. The two
- * that a naive version collapses are BLOCKING and NOT_REACHED, and they are the two that matter
- * most: one says the delegation is wrong, the other says nobody looked at the delegation.
+ * Solid, ticked, dotted, absent. Each is a different topology rather than a different shade, so
+ * none of the four depends on hue and all four survive a monochrome print. The two that a naive
+ * version collapses are BLOCKING and NOT_REACHED, and they are the two that matter most: one
+ * says the delegation is wrong, the other says nobody looked at the delegation. There is no
+ * fifth, severed treatment: an earlier contract version could take a verified condition back,
+ * and this component once drew a slashed arc for it, but verified delivery is final now.
  *
  * How it behaves at the two sizes:
  *
- *   seal, 168px   the full instrument. All five treatments, the count as a numeral in the
+ *   seal, 168px   the full instrument. All four treatments, the count as a numeral in the
  *                 centre, the segment legend beside it, and the gold inner rule at the instant
  *                 all three close.
  *
  *   mark, 22px    the same ring at the same angles, with heavier strokes and a wider gap so
  *                 three segments still read as three. At this size only MET is drawn, because
- *                 ticked, dotted and severed are distinctions 22 pixels cannot carry honestly.
- *                 The rest travels in the row's own words and in the accessible name, which is
- *                 complete at both sizes.
+ *                 ticked and dotted are distinctions 22 pixels cannot carry honestly. The rest
+ *                 travels in the row's own words and in the accessible name, which is complete
+ *                 at both sizes.
  *
  * Gold appears in this component and nowhere else in the product, on the full seal only, at the
  * moment the third arc closes. A mark is never gold, so a register of forty deals cannot spend
@@ -45,8 +45,6 @@ import {
   arcPath,
   segmentAngles,
   sealLabel,
-  severedHalves,
-  severPath,
   tickPaths,
   type SealSegment,
   type SealState,
@@ -135,23 +133,6 @@ function TickedChannel({ segment, preset }: { segment: SealSegment; preset: Pres
   );
 }
 
-/** Cut, then voided. The radial slash is what stops this reading as a partial engraving. */
-function SeveredArc({ segment, preset }: { segment: SealSegment; preset: Preset }) {
-  const [left, right] = severedHalves(C, C, preset.r, segment.order, preset.span, preset.gap);
-  return (
-    <>
-      <path d={left} fill="none" stroke="var(--document)" strokeWidth={preset.arc} />
-      <path d={right} fill="none" stroke="var(--document)" strokeWidth={preset.arc} />
-      <path
-        d={severPath(C, C, preset.r, segment.order, preset.span, preset.gap)}
-        fill="none"
-        stroke="var(--document)"
-        strokeWidth={2}
-      />
-    </>
-  );
-}
-
 /** The engraver's guide dots. Marked out, never cut, because the plate was never read here. */
 function DottedArc({ segment, preset }: { segment: SealSegment; preset: Preset }) {
   const { start, end } = segmentAngles(segment.order, preset.span, preset.gap);
@@ -213,15 +194,12 @@ export function ConveyanceSeal({
             <EngravedArc key={segment.key} segment={segment} preset={preset} animate={animate} />
           );
         }
-        // At the mark size only landed and not-landed are drawn. A ticked channel, a severed arc
-        // and a dotted arc are a pixel or two apart at 22px, and a distinction a reader cannot
-        // see is a distinction that misleads. The row's words carry them instead.
+        // At the mark size only landed and not-landed are drawn. A ticked channel and a dotted
+        // arc are a pixel or two apart at 22px, and a distinction a reader cannot see is a
+        // distinction that misleads. The row's words carry them instead.
         if (size === "mark") return null;
         if (segment.outcome === "BLOCKING") {
           return <TickedChannel key={segment.key} segment={segment} preset={preset} />;
-        }
-        if (segment.outcome === "REVERSED") {
-          return <SeveredArc key={segment.key} segment={segment} preset={preset} />;
         }
         if (segment.outcome === "NOT_REACHED") {
           return <DottedArc key={segment.key} segment={segment} preset={preset} />;
@@ -323,15 +301,6 @@ function SegmentMark({ outcome }: { outcome: SealSegment["outcome"] }) {
         <line x1="0" y1="4" x2="26" y2="4" stroke="var(--rule)" strokeWidth="3" />
         <line x1="1" y1="0" x2="1" y2="8" stroke="var(--document)" strokeWidth="2" />
         <line x1="25" y1="0" x2="25" y2="8" stroke="var(--document)" strokeWidth="2" />
-      </svg>
-    );
-  }
-  if (outcome === "REVERSED") {
-    return (
-      <svg {...common}>
-        <line x1="0" y1="4" x2="10" y2="4" stroke="var(--document)" strokeWidth="3" />
-        <line x1="16" y1="4" x2="26" y2="4" stroke="var(--document)" strokeWidth="3" />
-        <line x1="13" y1="0" x2="13" y2="8" stroke="var(--document)" strokeWidth="2" />
       </svg>
     );
   }

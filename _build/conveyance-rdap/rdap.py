@@ -1077,23 +1077,38 @@ def classify_proof(corroboration, expected_token):
     tag a refusal would carry, so the caller can tell "the name does not exist" from "the
     name exists and the token is not on it yet" from "the token is there". A proof that
     cannot be found is not a proof that failed, and neither is delivery.
+
+    Also returns `corroborated_absent`, which is narrower than "not PROOF_FOUND" and is the
+    only field a caller may use to conclude the proof is actually gone rather than merely
+    unconfirmed this round. It is True in exactly two cases, both of them two independent
+    resolvers agreeing with each other: they saw the same non-empty TXT set and the token is
+    not in it, or they both returned NXDOMAIN for the name. Every other case that reaches
+    here is disagreement between the resolvers, one of them answering nothing, mismatched
+    query names, or a single NXDOMAIN against an answer from the other resolver, and none of
+    those is evidence that a record was removed. The contract's `_check_from_verified` is the
+    caller this matters for: reading disagreement as disappearance there would let ordinary
+    DNS propagation lag or one resolver's outage reverse a delivery that never actually moved.
     """
     assert_proof_token_shape(expected_token)
     if not isinstance(corroboration, Corroboration):
         raise expected("classify_proof takes a Corroboration",
                        type(corroboration).__name__)
     if not corroboration.agreed:
+        all_nxdomain = (len(corroboration.observations) >= 2
+                        and all(obs.nxdomain for obs in corroboration.observations))
         if any(obs.nxdomain for obs in corroboration.observations):
             return {"outcome": PROOF_NAME_MISSING, "tag": corroboration.tag,
-                    "reason": corroboration.reason}
+                    "reason": corroboration.reason, "corroborated_absent": all_nxdomain}
         return {"outcome": PROOF_ABSENT, "tag": corroboration.tag,
-                "reason": corroboration.reason}
+                "reason": corroboration.reason, "corroborated_absent": False}
     if expected_token in corroboration.values:
         return {"outcome": PROOF_FOUND, "tag": None,
-                "reason": None, "digest": corroboration.digest}
+                "reason": None, "digest": corroboration.digest,
+                "corroborated_absent": False}
     return {"outcome": PROOF_ABSENT, "tag": TAG_TRANSIENT,
             "reason": "both resolvers agree on the TXT set and the expected token is not "
-                      "in it, which is an absent proof and may be incomplete propagation"}
+                      "in it, which is an absent proof and may be incomplete propagation",
+            "corroborated_absent": True}
 
 
 # ======================================================================================

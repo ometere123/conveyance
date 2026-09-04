@@ -742,7 +742,11 @@ def test_nxdomain_has_no_answer_key_and_arrives_with_http_200():
     # Two resolvers both saying the name does not exist is [EXTERNAL]: nothing observed.
     both = rdap.corroborate(obs, rdap.parse_doh(200, cf_raw, rdap.DOH_CLOUDFLARE))
     assert both.agreed is False and both.tag == rdap.TAG_EXTERNAL
-    assert rdap.classify_proof(both, "token")["outcome"] == rdap.PROOF_NAME_MISSING
+    both_verdict = rdap.classify_proof(both, "token")
+    assert both_verdict["outcome"] == rdap.PROOF_NAME_MISSING
+    # Both resolvers independently and unanimously say the name does not exist at all. That is
+    # the one disagreement-shaped case still strong enough to count as corroborated absence.
+    assert both_verdict["corroborated_absent"] is True
 
     # NOERROR with no Answer is a different absence: the name exists, the TXT set does not.
     nodata = rdap.parse_doh(200, json.dumps({
@@ -751,17 +755,25 @@ def test_nxdomain_has_no_answer_key_and_arrives_with_http_200():
     assert nodata.nxdomain is False and nodata.has_answer is False
     absent = rdap.corroborate(nodata, nodata)
     assert absent.agreed is False and absent.tag == rdap.TAG_EXTERNAL
+    # Unlike unanimous NXDOMAIN, "no Answer" is not read as corroborated absence: `corroborate`
+    # reports it whenever even one resolver was silent, which does not distinguish a genuine
+    # NODATA from an asymmetric, inconclusive gap the way unanimous NXDOMAIN does.
+    assert rdap.classify_proof(absent, "token")["corroborated_absent"] is False
 
     # A name that exists with a TXT set that lacks the token is the third case, and it is
-    # retryable because propagation may be incomplete.
+    # retryable because propagation may be incomplete, but the two resolvers did agree with
+    # each other on what is actually published, which is corroborated absence.
     present = rdap.parse_doh(200, fixture("doh-google-txt.json"), rdap.DOH_GOOGLE)
     found = rdap.corroborate(present, present)
     verdict = rdap.classify_proof(found, "_not_the_token_on_the_record")
     assert verdict["outcome"] == rdap.PROOF_ABSENT
     assert verdict["tag"] == rdap.TAG_TRANSIENT
+    assert verdict["corroborated_absent"] is True
     note("three absences kept distinct: NXDOMAIN (name gone, [EXTERNAL]), NOERROR/NODATA "
          "(no TXT set, [EXTERNAL]) and token-not-in-an-existing-TXT-set (PROOF_ABSENT, "
-         "[TRANSIENT]); none of them is delivery")
+         "[TRANSIENT]); none of them is delivery, and only the two resolvers actually "
+         "agreeing with each other (unanimous NXDOMAIN, or an identical TXT set missing the "
+         "token) is corroborated_absent, never the one-resolver-silent NOERROR/NODATA case")
 
 
 def test_rfc1035_multi_chunk_values_join_deterministically():
@@ -867,8 +879,12 @@ def test_the_disagreement_fixture_refuses_to_settle():
     verdict = rdap.classify_proof(result, "_k2n1y4vw3qtb4skdx9e7dxt97qrmmq9")
     assert verdict["outcome"] == rdap.PROOF_ABSENT
     assert verdict["tag"] == rdap.TAG_TRANSIENT
+    # The whole point of this fixture: the resolvers disagree with each other, which must never
+    # be read as the two of them agreeing the proof is gone.
+    assert verdict["corroborated_absent"] is False
     note("doh-disagreement refuses to settle: agreed False, [TRANSIENT], digest None, "
-         "outcome PROOF_ABSENT even though one resolver carries the real token")
+         "outcome PROOF_ABSENT even though one resolver carries the real token, and "
+         "corroborated_absent False because disagreement is not corroboration")
 
 
 def test_one_resolver_is_never_enough():
@@ -883,6 +899,9 @@ def test_one_resolver_is_never_enough():
     split = rdap.corroborate(only, gone)
     assert split.agreed is False and split.tag == rdap.TAG_TRANSIENT
     assert "NXDOMAIN from cloudflare" in split.reason
+    # One resolver NXDOMAIN and the other still answering is incomplete propagation, not the
+    # two of them agreeing the record is gone: not corroborated absence.
+    assert rdap.classify_proof(split, "token")["corroborated_absent"] is False
 
 
 def test_cloudflare_400s_without_the_accept_header():
@@ -939,6 +958,7 @@ def test_full_corroborated_fetch_through_both_resolvers():
     verdict = rdap.classify_proof(result, "_k2n1y4vw3qtb4skdx9e7dxt97qrmmq9")
     assert verdict["outcome"] == rdap.PROOF_FOUND and verdict["tag"] is None
     assert verdict["digest"] == result.digest
+    assert verdict["corroborated_absent"] is False   # found, so nothing is absent
     assert result.compared == rdap.PROOF_COMPARED
     assert len(result.excluded) == len(rdap.PROOF_EXCLUDED) == 8
 

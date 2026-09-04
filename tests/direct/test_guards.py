@@ -16,9 +16,12 @@ operational relationship with the domain. Delivery is not the buyer's word eithe
 outcomes are recorded rather than reverted, because a third party who ran a check has produced
 information the deal should carry, and the transfer deadline keeps running through all of them.
 
-The reversal tests at the end are the narrowest part of the contract and the part with a stated
-residual risk. Each of the three conditions is spoiled on its own, because a reversal that fired
-on any two of them would hand the buyer a way to keep the domain and take back the price.
+The tests at the end are about what happens after VERIFIED, which is final: no observation, on
+any signal this contract can read, moves a verified deal anywhere else. That used to be a narrow
+REVERSED path instead, gated on three conditions. It was removed rather than narrowed further,
+because RDAP names a sponsoring registrar and never an account, so "the registrar id is back at
+the seller's" cannot be told apart from "the buyer already used that registrar for something of
+their own." No version of that check could close the gap; only removing it could.
 """
 
 import pytest
@@ -49,7 +52,6 @@ OUT_AWAITING_DELEGATION = str_constant("OUT_AWAITING_DELEGATION")
 OUT_AWAITING_DNS = str_constant("OUT_AWAITING_DNS")
 OUT_SUSPENDED = str_constant("OUT_SUSPENDED")
 OUT_VERIFIED = str_constant("OUT_VERIFIED")
-OUT_REVERSED = str_constant("OUT_REVERSED")
 PROOF_FOUND = str_constant("PROOF_FOUND")
 CHECK_INTERVAL = numeric_constant("CHECK_INTERVAL_SECONDS")
 
@@ -489,7 +491,7 @@ def test_a_refund_is_refused_from_verified_because_the_seller_delivered(
     set_block_time(direct_vm, "2026-03-09T00:00:00Z")
     for caller in (direct_alice, direct_charlie):
         direct_vm.sender = caller
-        with direct_vm.expect_revert("a refund needs OFFERED, LOCKED or REVERSED"):
+        with direct_vm.expect_revert("a refund needs OFFERED or LOCKED"):
             contract.refund(DEAL_ID)
 
     assert contract.get_deal(DEAL_ID)["state"] == "VERIFIED"
@@ -581,8 +583,15 @@ def test_a_stranger_cannot_abandon_an_offer(
 
 
 # ----------------------------------------------------------------------------------------------
-# The reversal, which needs all three of its conditions
+# VERIFIED is final
 # ----------------------------------------------------------------------------------------------
+
+#: A transfer event genuinely after the one delivery recorded (TRANSFER_EVENT_AT, 05:00) and
+#: after delivery itself (DELIVERED_AT, 06:00Z). Under the removed REVERSED path this, combined
+#: with a registrar id back at baseline and a corroborated-absent proof, used to be exactly what
+#: reversed a deal. It is included in the parametrized test below to prove that combination now
+#: does nothing at all.
+LATER_TRANSFER_AT = "2026-03-02T06:30:00Z"
 
 
 def test_a_delivery_that_still_stands_is_recorded_and_changes_nothing(
@@ -597,78 +606,107 @@ def test_a_delivery_that_still_stands_is_recorded_and_changes_nothing(
     assert deal["checks"] == "2"
     assert deal["inspection_deadline"] == INSPECTION_DEADLINE
     assert "delivery still stands" in said
-    assert contract.ledger()["reversals_recorded"] == "0"
-
-
-def test_a_domain_back_at_the_sellers_registrar_with_the_proof_gone_is_a_reversal(
-    contract, direct_vm, direct_alice, direct_charlie, value_ledger, sources, verified
-):
-    """All three conditions met, which is the only combination that reaches REVERSED.
-
-    And then the refund, because REVERSED exists to open that door: the fact is already on chain,
-    so the refund needs no deadline, no further evidence and neither party's cooperation.
-    """
-    said = lifecycle.check(
-        contract, direct_vm, sources, direct_charlie,
-        now="2026-03-02T07:00:00Z",
-        registrar_id=BASELINE_REGISTRAR_ID,
-        nameservers=BASELINE_NAMESERVERS,
-        nxdomain=True,
-    )
-
-    deal = contract.get_deal(DEAL_ID)
-    assert deal["state"] == "REVERSED"
-    assert deal["last_check_outcome"] == OUT_REVERSED
-    assert BASELINE_REGISTRAR_ID in deal["last_check_note"]
-    assert "the buyer's control proof is gone" in deal["last_check_note"]
-    assert contract.ledger()["reversals_recorded"] == "1"
-    assert "refundable to the buyer" in said
-
-    direct_vm.sender = direct_charlie
-    contract.refund(DEAL_ID)
-    assert value_ledger.paid_to(direct_alice) == ESCROW
-    assert contract.ledger()["held"] == "0"
 
 
 @pytest.mark.parametrize(
-    "spoil, now, why",
+    "label, spoil",
     [
-        # The domain moved on to a third registrar. That is the buyer using the control they
-        # bought, not the seller taking the domain back.
-        ({"registrar_id": "9999", "nxdomain": True}, "2026-03-02T07:00:00Z",
-         "not a reversal to the seller's registrar"),
-        # Back at the seller's registrar, but the buyer's proof is still published, so the buyer
-        # still demonstrably controls the name.
-        ({"registrar_id": BASELINE_REGISTRAR_ID, "nameservers": BASELINE_NAMESERVERS},
-         "2026-03-02T07:00:00Z", "the buyer's control proof is still corroborated"),
-        # Everything a reversal needs, one instant too late.
-        ({"registrar_id": BASELINE_REGISTRAR_ID, "nameservers": BASELINE_NAMESERVERS,
-          "nxdomain": True}, INSPECTION_DEADLINE, "outside the inspection window"),
+        # Every signal the removed REVERSED path required, all at once: the domain back at the
+        # seller's registrar, a registry-recorded transfer after delivery, and the buyer's proof
+        # corroborated absent by both resolvers agreeing it is gone (unanimous NXDOMAIN). This is
+        # the strongest possible case for "the seller took the domain back", and it still must not
+        # move the deal anywhere.
+        ("every signal a reversal used to need, all at once",
+         {"registrar_id": "BASELINE", "nameservers": "BASELINE",
+          "transfer_at": LATER_TRANSFER_AT, "nxdomain": True}),
+        # Registrar back at baseline, proof corroborated absent, but no new transfer event: the
+        # buyer may simply already use the seller's original registrar for something unrelated.
+        ("registrar matches baseline with no new transfer event",
+         {"registrar_id": "BASELINE", "nameservers": "BASELINE", "nxdomain": True}),
+        # A third registrar entirely: the buyer exercising the control they paid for.
+        ("moved to a third registrar",
+         {"registrar_id": "9999", "transfer_at": LATER_TRANSFER_AT, "nxdomain": True}),
     ],
 )
-def test_a_reversal_missing_any_one_of_its_three_conditions_is_recorded_and_not_acted_on(
-    contract, direct_vm, direct_charlie, value_ledger, sources, verified, spoil, now, why
+def test_verified_is_final_however_strong_the_signal_looks(
+    contract, direct_vm, direct_charlie, value_ledger, sources, verified, label, spoil
 ):
-    """Each condition spoiled on its own, with the other two intact.
+    """Nothing `check_transfer` can observe moves a deal out of VERIFIED.
 
-    This is the narrowest guard in the contract and the one with a stated residual risk, so the
-    conditions are tested separately rather than together. A reversal that fired on any two of
-    them would hand the buyer a way to keep the domain and take the price back: they control the
-    name after delivery, so they can move it and delete the proof record whenever they like.
-
-    The deal stays VERIFIED and the observation is still written, which is the right pair of
-    outcomes. The seller keeps the claim they earned, and the buyer keeps a public record of what
-    they saw.
+    Each case here is a signal combination the contract's removed REVERSED path used to treat as
+    evidence the domain went back to the seller. None of them actually proves that, because RDAP
+    names a registrar and never an account, so every one of them is left exactly where it landed:
+    VERIFIED, the observation recorded, the escrow untouched.
     """
-    said = lifecycle.check(contract, direct_vm, sources, direct_charlie, now=now, **spoil)
+    kwargs = dict(spoil)
+    if kwargs.get("registrar_id") == "BASELINE":
+        kwargs["registrar_id"] = BASELINE_REGISTRAR_ID
+    if kwargs.get("nameservers") == "BASELINE":
+        kwargs["nameservers"] = BASELINE_NAMESERVERS
+
+    said = lifecycle.check(contract, direct_vm, sources, direct_charlie,
+                           now="2026-03-02T07:00:00Z", **kwargs)
+
+    deal = contract.get_deal(DEAL_ID)
+    assert deal["state"] == "VERIFIED", label
+    assert "verified delivery is final" in said
+    assert contract.ledger()["held"] == str(ESCROW)
+    assert value_ledger.transfers == []
+
+    # And a refund is still refused, on the same grounds as any other check from VERIFIED.
+    direct_vm.sender = direct_charlie
+    with direct_vm.expect_revert("a refund needs OFFERED or LOCKED"):
+        contract.refund(DEAL_ID)
+
+
+def test_resolvers_disagreeing_does_not_touch_a_verified_deal(
+    contract, direct_vm, direct_charlie, sources, verified
+):
+    """Two resolvers returning different TXT sets is a disagreement, not evidence of removal,
+    and under VERIFIED-is-final it cannot move the deal regardless: recorded, and nothing else.
+    """
+    used_token = lifecycle.BUYER_TOKEN
+    set_block_time(direct_vm, "2026-03-02T07:00:00Z")
+    sources.serve(
+        rdap_body=evidence.delivered(
+            registrar_id=BASELINE_REGISTRAR_ID,
+            nameservers=BASELINE_NAMESERVERS,
+            transfer_at=LATER_TRANSFER_AT,
+        ),
+        cloudflare=evidence.doh_txt("cloudflare", lifecycle.BUYER_PROOF_NAME, [used_token]),
+        google=evidence.doh_txt("google", lifecycle.BUYER_PROOF_NAME, ["not-the-buyers-token"]),
+    )
+    direct_vm.sender = direct_charlie
+    said = contract.check_transfer(DEAL_ID, used_token)
 
     deal = contract.get_deal(DEAL_ID)
     assert deal["state"] == "VERIFIED"
-    assert why in said
-    assert "not treated as a reversal" in said
-    assert deal["checks"] == "2"
-    assert contract.ledger()["reversals_recorded"] == "0"
-    assert value_ledger.transfers == []
-
-    # And the escrow is still the seller's to collect, which is the consequence of not reversing.
+    assert "verified delivery is final" in said
     assert contract.ledger()["held"] == str(ESCROW)
+
+
+def test_one_resolver_going_silent_does_not_touch_a_verified_deal(
+    contract, direct_vm, direct_charlie, value_ledger, sources, verified
+):
+    """One resolver seeing NXDOMAIN while the other still sees the buyer's proof is incomplete
+    propagation, an ordinary transient DNS condition, and it leaves a verified deal untouched.
+    """
+    token = lifecycle.BUYER_TOKEN
+    set_block_time(direct_vm, "2026-03-02T07:00:00Z")
+    sources.serve(
+        rdap_body=evidence.delivered(
+            registrar_id=BASELINE_REGISTRAR_ID,
+            nameservers=BASELINE_NAMESERVERS,
+            transfer_at=LATER_TRANSFER_AT,
+        ),
+        cloudflare=evidence.doh_nxdomain("cloudflare", lifecycle.BUYER_PROOF_NAME),
+        google=evidence.doh_txt("google", lifecycle.BUYER_PROOF_NAME, [token]),
+    )
+    direct_vm.sender = direct_charlie
+    said = contract.check_transfer(DEAL_ID, token)
+
+    deal = contract.get_deal(DEAL_ID)
+    assert deal["state"] == "VERIFIED"
+    assert "verified delivery is final" in said
+    assert contract.ledger()["held"] == str(ESCROW)
+    assert value_ledger.transfers == []

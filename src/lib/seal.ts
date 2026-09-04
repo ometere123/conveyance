@@ -26,27 +26,27 @@
  * check's position and the deal page draws it from the recorded reading, and the register says
  * which of the two it did rather than letting the two drawings differ silently.
  *
- * The five segment treatments, and why each looks the way it does:
+ * The four segment treatments, and why each looks the way it does:
  *
  *   MET          a solid engraved arc. The line was cut.
  *   BLOCKING     the empty channel with its two end ticks cut. The engraver reached this
  *                segment, set his marks, and stopped. The condition was read and does not hold.
  *   NOT_REACHED  the guide dots and no cut. The check stopped at an earlier condition, so
  *                nothing was read about this one and no claim was ever engraved.
- *   REVERSED     the arc is cut and then severed, with a radial slash across the break. It
- *                held once, and the registry took it back.
  *   UNCHECKED    a blank plate. No check has run against this deal at all.
  *
- * Solid, ticked, dotted, severed, absent. None of the five depends on hue, and each is a
- * different topology rather than a different shade, which is what makes them survive a small
- * size, a monochrome print and a colour-vision difference alike.
+ * Solid, ticked, dotted, absent. None of the four depends on hue, and each is a different
+ * topology rather than a different shade, which is what makes them survive a small size, a
+ * monochrome print and a colour-vision difference alike. There is no fifth, severed treatment:
+ * an earlier contract version could take a verified condition back and this drawing had a mark
+ * for it, but verified delivery is final now, so nothing this seal reads can ever produce that
+ * state again.
  */
 
 import type {
   CheckOutcome,
   ConditionKey,
   ConditionOutcome,
-  DealState,
   ProofOutcome,
 } from "@/lib/contract-types";
 import {
@@ -70,8 +70,6 @@ export type SealState = {
   closed: boolean;
   /** The recorded outcome this state was read from, so the legend can print its own note. */
   outcome: CheckOutcome;
-  /** True when a condition held and was taken back. The one backwards-looking case. */
-  reversed: boolean;
   /** True when no check has ever run. Distinct from every condition failing. */
   unchecked: boolean;
   /**
@@ -137,15 +135,6 @@ const LADDER: Record<Exclude<CheckOutcome, "">, Record<ConditionKey, ConditionOu
     transferred: "MET",
     controlled: "MET",
   },
-  // Both of the last two segments are severed, and `_check_from_verified` is why. A reversal is
-  // recorded only when the registration has gone back to the registrar the seller held it at
-  // AND the buyer's control proof is gone. Both conditions held at the delivering check and
-  // both were taken back at this one, so drawing only one of them severed would understate it.
-  REVERSED: {
-    deliverable: "MET",
-    transferred: "REVERSED",
-    controlled: "REVERSED",
-  },
 };
 
 /**
@@ -178,7 +167,6 @@ const ALL_UNCHECKED: Record<ConditionKey, ConditionOutcome> = {
  * not carry it. It is not optional because the field is sometimes meaningless.
  */
 export type Sealable = {
-  state: DealState;
   last_check_outcome: CheckOutcome;
   last_proof_outcome?: ProofOutcome;
 };
@@ -191,20 +179,17 @@ export type Sealable = {
  * be printed as a finding.
  */
 export function sealState(deal: Sealable): SealState {
-  // The state wins over the recorded outcome in exactly one case. REVERSED is the state that
-  // decides where the money goes, and a deal sitting in it must draw a severed seal even if
-  // some later write left the check fields saying something softer.
-  const outcome: CheckOutcome = deal.state === "REVERSED" ? "REVERSED" : deal.last_check_outcome;
+  const outcome: CheckOutcome = deal.last_check_outcome;
   const row =
     outcome && outcome in LADDER ? LADDER[outcome as Exclude<CheckOutcome, "">] : ALL_UNCHECKED;
   const unchecked = row === ALL_UNCHECKED;
 
   // Three conditions have to hold before the recorded proof outcome may replace the placed one:
   // a check has run at all, the caller has the field, and the field holds a value this build
-  // recognises. A reversal is left alone because the state has already decided both segments.
+  // recognises.
   const proof = deal.last_proof_outcome;
   const fromProof =
-    !unchecked && outcome !== "REVERSED" && proof && proof in FROM_PROOF
+    !unchecked && proof && proof in FROM_PROOF
       ? FROM_PROOF[proof as Exclude<ProofOutcome, "">]
       : null;
 
@@ -222,7 +207,6 @@ export function sealState(deal: Sealable): SealState {
     met,
     closed: met === 3,
     outcome,
-    reversed: segments.some((segment) => segment.outcome === "REVERSED"),
     unchecked,
     proofFromRecord: fromProof !== null,
   };
@@ -372,9 +356,6 @@ export function sealSentence(state: SealState): string {
   }
   if (state.closed) {
     return `All three conditions are engraved and the seal is closed. ${CHECK_OUTCOME_TEXT.VERIFIED.means}`;
-  }
-  if (state.reversed) {
-    return `The seal is severed. ${CHECK_OUTCOME_TEXT.REVERSED.means}`;
   }
   const note = CHECK_OUTCOME_TEXT[state.outcome]?.means ?? "";
   return `The seal is open at ${state.met} of 3, and the escrow cannot move while it is open. ${note}`;
