@@ -172,7 +172,7 @@ export default async function RegisterPage() {
       <section className="cv-panel-engraved p-6 plate:p-8">
         <h2 className="cv-heading">What each state means for the money</h2>
         <p className="cv-body mt-2 max-w-[72ch]">
-          Six states, and the only question a reader actually has about any of them is where the
+          Five states, and the only question a reader actually has about any of them is where the
           consideration is. So that is what the second line says, in words, rather than a colour
           somebody has to learn.
         </p>

@@ -7,7 +7,7 @@
  * cannot hold a combination the contract could not reach, and it cannot forget a field, because
  * the factory owns all forty-seven and each fixture only names what a write would have changed.
  *
- * The register covers all six states, all seven recorded check outcomes, and all four proof
+ * The register covers all five states, all six recorded check outcomes, and all four proof
  * outcomes, including both meanings of `PROOF_ABSENT`. Three fixtures exist specifically for
  * shapes an earlier version of this app got wrong and could not have caught: a check that
  * stopped early while the buyer's proof was already corroborated, a check that stopped early
@@ -840,9 +840,9 @@ export const MOCK_DEALS: Deal[] = [
  * here because nothing is wrong; the contract reports both precisely so that the case where
  * they differ is visible instead of hidden behind whichever number looks better.
  *
- * `deliveries_verified` is 3 and not 1: CVY-1078 is verified now, CVY-1077 was verified before
- * it reversed, and CVY-1076 was verified before it settled. The counter records deliveries
- * that happened, not deals currently in the VERIFIED state.
+ * `deliveries_verified` is 3 and not 1: CVY-1078 and CVY-1077 are both verified now, and
+ * CVY-1076 was verified before it settled. The counter records deliveries that happened, not
+ * deals currently in the VERIFIED state.
  */
 export const MOCK_LEDGER: Ledger = {
   total_escrowed: "271750000000000000000",

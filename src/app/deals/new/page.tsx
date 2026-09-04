@@ -114,12 +114,12 @@ export default async function NewDealPage() {
             {transferWindow ? `, which is ${formatWindow(transferWindow)} after acceptance` : ""}.
             Not before.
           </Clause>
-          <Clause label="delivery is not the end of it">
+          <Clause label="verified delivery is final">
             After a check verifies delivery, an inspection window runs
-            {inspectionWindow ? ` for ${formatWindow(inspectionWindow)}` : ""}. If the registry takes
-            the name back inside that window, a check records the reversal and the escrow returns to
-            you. Settlement is available only once the window has closed with the delivery still
-            standing.
+            {inspectionWindow ? ` for ${formatWindow(inspectionWindow)}` : ""}, during which you may
+            settle at once if you are satisfied. Once verified, there is no refund route: the
+            registry and both resolvers already agreed the name is yours, and that does not get
+            revisited. Anyone may settle once the window closes.
           </Clause>
           <Clause label="anyone can drive it, including neither of you">
             Every transition is a public call. A check, a settlement, a refund: none of them are

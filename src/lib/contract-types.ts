@@ -436,9 +436,10 @@ export function baselineSnapshot(deal: Deal): RegistrySnapshot {
 /**
  * The last check, which is not the same thing as the delivered snapshot.
  *
- * A deal that verified and then reversed has a delivered snapshot from the check that
- * verified and a last-check snapshot from the one that found the reversal, and printing
- * either as "the current state" would be a different claim from the other.
+ * A verified deal keeps a delivered snapshot from the check that verified it, and a later
+ * check can still write a different last-check snapshot without moving the deal, since
+ * verified delivery is final. Printing either as "the current state" would be a different
+ * claim from the other.
  */
 export function observedSnapshot(deal: Deal): RegistrySnapshot {
   return {

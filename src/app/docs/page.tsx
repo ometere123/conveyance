@@ -279,9 +279,11 @@ export default async function DocsPage() {
         <h2 className="cv-heading">What can be called from each state</h2>
         <p className="cv-body mt-2 max-w-[72ch]">
           A deal never returns to an earlier state, which is what makes a state name safe to print
-          beside a sum of money. Verified to Reversed is the one backwards-looking transition and it
-          is not a retreat: it records that the registry took back a transfer it had published, and
-          the escrow still has to be returned out of it.
+          beside a sum of money. Verified is final: no later observation moves a deal out of it, on
+          purpose. RDAP names a sponsoring registrar and never an account, so nothing this contract
+          can read distinguishes the seller genuinely taking a domain back from the buyer moving
+          their own delivered property around, and a check run after delivery records what it sees
+          without ever acting on it.
         </p>
         <dl className="cv-panel mt-6 p-6">
           {DEAL_STATES.map((state) => (

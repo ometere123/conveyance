@@ -234,7 +234,7 @@ function CheckCard({
       title="Run a check"
       what={
         deal.state === "VERIFIED"
-          ? "Reads the registry and both resolvers again. From here the same call is how a reversal is caught: if the registration has gone back to the seller's own registrar and the proof has gone with it, this records that and the escrow becomes the buyer's."
+          ? "Reads the registry and both resolvers again and records what they say. Verified delivery is final, so this cannot move the deal or change who the escrow belongs to; it only adds to the record."
           : "Makes every validator fetch the registry and both resolvers, compare what they find against the frozen baseline, and write the answer down whatever it is. Four of the outcomes advance nothing and are still recorded."
       }
       buttonLabel="Run the check"

@@ -370,7 +370,7 @@ export const METHODS: Record<string, MethodSpec> = {
         from: "VERIFIED",
         caller: "anyone",
         because:
-          "The same call from Verified is how a reversal is caught. It reads the same two sources and can move the deal to Reversed.",
+          "The same call from Verified reads the same two sources and records what they say, but delivery is final by then, so nothing it observes moves the deal.",
       },
     ],
   },

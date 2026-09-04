@@ -12,12 +12,14 @@
  * a freshness the chain does not have.
  *
  * WHY THERE IS A THIRD SNAPSHOT BELOW. `delivered_registrar_id`, `delivered_transfer_at` and
- * `delivered_digest` are frozen at the check that reached VERIFIED and are never overwritten. A
- * deal that verified and then reversed therefore has two different truthful answers to "what does
- * the registry say", and printing either alone would be a different claim from the other. So the
- * delivered snapshot gets its own small block whenever it exists, and it is compared against the
- * last check rather than against the baseline, because the reversal is the difference between
- * those two.
+ * `delivered_digest` are frozen at the check that reached VERIFIED and are never overwritten.
+ * VERIFIED is final and a later check cannot move the deal, but it can still be run, and what it
+ * observes can still differ from what delivery looked like: the buyer may since have moved the
+ * domain on, which is their property to move. A deal in that shape has two different truthful
+ * answers to "what does the registry say", and printing either alone would be a different claim
+ * from the other. So the delivered snapshot gets its own small block whenever it exists, and it
+ * is compared against the last check rather than against the baseline, because that difference is
+ * what happened after delivery rather than what happened to deliver it.
  *
  * Every changed row carries a Δ and the word "changed". The mark is redundant with the column
  * layout and with the word, so nothing here depends on noticing a hue.
@@ -310,8 +312,9 @@ function Authority({ deal }: { deal: Deal }) {
  * The snapshot frozen at the delivering check.
  *
  * Printed only when one exists, and compared against the last check rather than the baseline.
- * For a deal sitting in VERIFIED the two agree and the block says so in one line. For a reversed
- * deal they do not, and the difference between them is the entire reason the money went back.
+ * For a deal whose last check still matches delivery the two agree and the block says so in one
+ * line. Where they differ, the difference is whatever happened to the domain after delivery,
+ * which VERIFIED being final means is now the buyer's business rather than a claim on the escrow.
  */
 function Delivered({ deal, after }: { deal: Deal; after: RegistrySnapshot }) {
   if (!deal.delivered_digest && !deal.delivered_registrar_id) return null;
@@ -333,7 +336,7 @@ function Delivered({ deal, after }: { deal: Deal; after: RegistrySnapshot }) {
       </p>
       <p className="cv-body mt-2 max-w-[68ch]">
         {moved
-          ? "These three fields were frozen at the check that found all three conditions met, and they are never overwritten. The last check no longer agrees with them, which is what a reversal is: the registration went back and the proof went with it."
+          ? "These three fields were frozen at the check that found all three conditions met, and they are never overwritten. The last check no longer agrees with them, which is what happened to the domain after delivery rather than a claim on the escrow: verified delivery is final."
           : "These three fields were frozen at the check that found all three conditions met. The last check still agrees with them, so nothing has moved since delivery."}
       </p>
       <dl className="mt-3 grid gap-x-8 gap-y-2 plate:grid-cols-3">
