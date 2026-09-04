@@ -6,7 +6,7 @@
   "deploymentTransaction": "0x552ba89f835ef769890af241a07b4996f422011d99a7d1ed18b45348ecf02499",
   "deploymentSubmittedAt": "2026-09-04T17:29:41.469680+00:00",
   "deploymentSubmittedAtNote": "The timestamp StudioNet records against the deployment transaction itself, which is the only deployment time this repository can prove.",
-  "gitCommitCarryingDeployedSource": null,
+  "gitCommitCarryingDeployedSource": "5a3533b64ee3571e4c99b0f609a1f71a22d1b981",
   "contractFile": "contracts/Conveyance.py",
   "contractSha256": "83c9c439e3da904849ed302feb62cdcb0173f4177715a5d179ba0610e5e71c4d",
   "contractBytes": 132381,

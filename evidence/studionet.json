@@ -8,7 +8,7 @@
   "contract": "0xa87eA0D26cBDC76f49cdB36dD6d52a9abB6f1693",
   "recordedAt": "2026-09-04",
   "currentDeployment": {
-    "gitCommit": null,
+    "gitCommit": "5a3533b64ee3571e4c99b0f609a1f71a22d1b981",
     "deploymentTransaction": "0x552ba89f835ef769890af241a07b4996f422011d99a7d1ed18b45348ecf02499",
     "contract": "0xa87eA0D26cBDC76f49cdB36dD6d52a9abB6f1693",
     "status": "FINALIZED",
